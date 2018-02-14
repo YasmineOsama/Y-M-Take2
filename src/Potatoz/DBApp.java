@@ -27,7 +27,9 @@ public class DBApp {
 		sb = new StringBuilder();
 		sb.append(strClusteringKeyColumn);
 		sb.append(",");
-		sb.append(htblColNameType.keySet());
+		String htbl = htblColNameType.keySet().toString();
+		htbl = htbl.substring(1, htbl.length()-1);
+		sb.append(htbl);
 		writer.write(sb.toString());
 		writer.close();
 	}
@@ -53,7 +55,7 @@ public class DBApp {
 	public static void main(String[] args) throws IOException {
 		DBApp app = new DBApp();
 		app.init();
-		String strTableName = "o";
+		String strTableName = "Students";
 		Hashtable htblColNameType = new Hashtable( );
 		htblColNameType.put("id", "java.lang.Integer");
 		htblColNameType.put("name", "java.lang.String");
