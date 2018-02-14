@@ -7,8 +7,8 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class DBApp {
-	PrintWriter writer;
-	StringBuilder sb;
+	static PrintWriter writer;
+	static StringBuilder sb;
 	File location;
 	Hashtable<String, Hashtable<String, String>> restrictions;
 
@@ -20,14 +20,14 @@ public class DBApp {
 		new File("config").mkdirs();
 	}
 
-	public void createTable(String strTableName, String strClusteringKeyColumn,
+	public static void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws FileNotFoundException {
 		htblColNameType.keySet().remove(strClusteringKeyColumn);
-		writer = new PrintWriter(new File(strTableName + ".csv"));
+		writer = new PrintWriter(new File("data/"+strTableName + ".csv"));
 		sb = new StringBuilder();
 		sb.append(strClusteringKeyColumn);
 		sb.append(",");
-		sb.append(htblColNameType.keySet().remove(strClusteringKeyColumn));
+		sb.append(htblColNameType.keySet());
 		writer.write(sb.toString());
 		writer.close();
 	}
@@ -53,6 +53,14 @@ public class DBApp {
 	public static void main(String[] args) throws IOException {
 		DBApp app = new DBApp();
 		app.init();
+		String strTableName = "o";
+		Hashtable htblColNameType = new Hashtable( );
+		htblColNameType.put("id", "java.lang.Integer");
+		htblColNameType.put("name", "java.lang.String");
+		htblColNameType.put("gpa", "java.lang.double");
+		htblColNameType.put("uni", "java.lang.String");
+
+		app.createTable( strTableName, "id", htblColNameType );
 	}
 
 }
