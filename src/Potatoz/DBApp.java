@@ -61,8 +61,8 @@ public class DBApp {
 		htblColNameType.keySet().remove(strClusteringKeyColumn);
 		writer = new PrintWriter(new File("data/"+strTableName + ".csv"));
 		sb = new StringBuilder();
-		// sb.append(strClusteringKeyColumn);
-		// sb.append(",");
+		sb.append(strClusteringKeyColumn);
+		sb.append(",");
 		String htbl = htblColNameType.keySet().toString();
 		htbl = htbl.substring(1, htbl.length() - 1);
 		sb.append(htbl);
