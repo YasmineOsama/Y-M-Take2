@@ -56,16 +56,17 @@ public class DBApp {
 	}
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
-			Hashtable<String, String> htblColNameType) throws IOException {
+		Hashtable<String, String> htblColNameType) throws IOException {
 		String keyType = htblColNameType.get(strClusteringKeyColumn);
 		htblColNameType.keySet().remove(strClusteringKeyColumn);
 		writer = new PrintWriter(new File("data/"+strTableName + ".csv"));
 		sb = new StringBuilder();
-		sb.append(strClusteringKeyColumn);
-		sb.append(",");
+		// sb.append(strClusteringKeyColumn);
+		// sb.append(",");
 		String htbl = htblColNameType.keySet().toString();
-		htbl = htbl.substring(1, htbl.length()-1);
+		htbl = htbl.substring(1, htbl.length() - 1);
 		sb.append(htbl);
+
 		writer.write(sb.toString());
 		writer.close();
 		String title = "Table Name, Column Name, Column Type, Key, Indexed";
@@ -150,22 +151,22 @@ public class DBApp {
 		htblColNameValue.put("id", new Integer(2343432));
 		htblColNameValue.put("name", new String("Ahmed Noor"));
 		htblColNameValue.put("gpa", new Double(0.95));
-		//app.insertIntoTable(strTableName, htblColNameValue);
+		app.insertIntoTable(strTableName, htblColNameValue);
 		htblColNameValue.clear();
 		htblColNameValue.put("id", new Integer(5674567));
 		htblColNameValue.put("name", new String("Dalia Noor"));
 		htblColNameValue.put("gpa", new Double(1.25));
-		//app.insertIntoTable(strTableName, htblColNameValue);
+		app.insertIntoTable(strTableName, htblColNameValue);
 		htblColNameValue.clear();
 		htblColNameValue.put("id", new Integer(23498));
 		htblColNameValue.put("name", new String("John Noor"));
 		htblColNameValue.put("gpa", new Double(1.5));
-		//app.insertIntoTable(strTableName, htblColNameValue);
+		app.insertIntoTable(strTableName, htblColNameValue);
 		htblColNameValue.clear();
 		htblColNameValue.put("id", new Integer(78452));
 		htblColNameValue.put("name", new String("Zaky Noor"));
 		htblColNameValue.put("gpa", new Double(0.88));
-		//app.insertIntoTable(strTableName, htblColNameValue);
+		app.insertIntoTable(strTableName, htblColNameValue);
 	}
 
 }
