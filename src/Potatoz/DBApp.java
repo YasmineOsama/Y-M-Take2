@@ -57,13 +57,16 @@ public class DBApp {
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
 		Hashtable<String, String> htblColNameType) throws IOException {
+		restrictions.put(strTableName, htblColNameType);
 		String keyType = htblColNameType.get(strClusteringKeyColumn);
-		htblColNameType.keySet().remove(strClusteringKeyColumn);
+		@SuppressWarnings("unchecked")
+		Set<String> temp = ((Hashtable<String, String>) htblColNameType.clone()).keySet();
+		temp.remove(strClusteringKeyColumn);
 		writer = new PrintWriter(new File("data/"+strTableName + ".csv"));
 		sb = new StringBuilder();
 		sb.append(strClusteringKeyColumn);
 		sb.append(",");
-		String htbl = htblColNameType.keySet().toString();
+		String htbl = temp.toString();
 		htbl = htbl.substring(1, htbl.length() - 1);
 		sb.append(htbl);
 
@@ -109,7 +112,6 @@ public class DBApp {
 	}
 
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws IOException {
-
 		sb = new StringBuilder();
 		Object[] keys = htblColNameValue.keySet().toArray();
 		Object value;
