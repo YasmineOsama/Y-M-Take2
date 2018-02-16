@@ -31,18 +31,42 @@ public class DBApp {
 		FileReader fr = new FileReader(f1);
 		BufferedReader br = new BufferedReader(fr);
 		while ((line = br.readLine()) != null) {
-			if (line.contains("java"))
-				line = line.replace("java", " ");
 			lines.add(line);
 		}
+		LinkedList<Double> ids = new LinkedList<Double>();
+		for (int i = 1; i < lines.size(); i++) {
+			ids.add(Double.parseDouble(lines.get(i).split(",")[0]));
+		}
+		ids.add(Double.parseDouble(s.split(",")[0]));
+		Collections.sort(ids);
 		fr.close();
 		br.close();
 		writer = new PrintWriter("data/" + strTableName + ".csv");
-		String whole = "";
-		for (String string : lines) {
-			whole += string + '\n';
-		}
-		writer.write(whole + s.toString());
+		String whole = lines.get(0) + '\n';
+		String[] temp = new String[ids.size()];
+		if (lines.size() > 1)
+			for (int i = 0; i < ids.size();)
+				for (int j = 1; j < lines.size() || !s.equals(""); j++) {
+					if (s.split(",")[0].equals(ids.get(i) + "")) {
+						whole += s.toString() + '\n';
+						s = "";
+						ids.remove(i);
+						break;
+					} else {
+						temp = lines.get(j).split(",");
+						if (temp[0].equals(ids.get(i) + "")) {
+
+							whole += lines.get(j) + '\n';
+							lines.remove(j);
+							ids.remove(i);
+							break;
+						}
+					}
+				}
+		else
+			whole += s.toString() + '\n';
+
+		writer.write(whole);
 		writer.close();
 	}
 
@@ -56,13 +80,13 @@ public class DBApp {
 	}
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
-		Hashtable<String, String> htblColNameType) throws IOException {
+			Hashtable<String, String> htblColNameType) throws IOException {
 		restrictions.put(strTableName, htblColNameType);
 		String keyType = htblColNameType.get(strClusteringKeyColumn);
 		@SuppressWarnings("unchecked")
 		Set<String> temp = ((Hashtable<String, String>) htblColNameType.clone()).keySet();
 		temp.remove(strClusteringKeyColumn);
-		writer = new PrintWriter(new File("data/"+strTableName + ".csv"));
+		writer = new PrintWriter(new File("data/" + strTableName + ".csv"));
 		sb = new StringBuilder();
 		sb.append(strClusteringKeyColumn);
 		sb.append(",");
@@ -76,37 +100,36 @@ public class DBApp {
 		String fileString = "data/metadata.csv";
 		StringBuilder sb2 = new StringBuilder();
 		sb2.append(title);
-		FileWriter fw = new FileWriter(fileString,true);
+		FileWriter fw = new FileWriter(fileString, true);
 		fw.write(sb2.toString());
 		fw.write("\n");
 		fw.close();
-		
+
 		List<String> col = Arrays.asList(sb.toString().replaceAll("\\s+", "").split(","));
-		for(int i =0; i<col.size(); i++) {
+		for (int i = 0; i < col.size(); i++) {
 			String type = "";
-			if(strClusteringKeyColumn.equals(col.get(i))) {
+			if (strClusteringKeyColumn.equals(col.get(i))) {
 				type = keyType;
-			}
-			else {
-				type =  htblColNameType.get(col.get(i));
+			} else {
+				type = htblColNameType.get(col.get(i));
 			}
 			metadata(strTableName, col.get(i), type, strClusteringKeyColumn.equals(col.get(i)), true);
 		}
-		
+
 	}
-	
-	public static void metadata(String TableName, String ColName, String ColType, Boolean Key, Boolean index) throws IOException {
+
+	public static void metadata(String TableName, String ColName, String ColType, Boolean Key, Boolean index)
+			throws IOException {
 		String row = TableName + "," + ColName + "," + ColType + "," + Key + "," + index;
 		String fileString = "data/metadata.csv";
 		StringBuilder sb2 = new StringBuilder();
 		sb2.append(row);
-		FileWriter fw = new FileWriter(fileString,true);
+		FileWriter fw = new FileWriter(fileString, true);
 		fw.write(sb2.toString());
 		fw.write("\n");
 		fw.close();
-		
-	}
 
+	}
 
 	public void createBRINIndex(String strTableName, String strColName) {
 	}
