@@ -27,7 +27,7 @@ public class DBApp {
 	public void modify(String strTableName, String s) throws IOException {
 		List<String> lines = new ArrayList<String>();
 		String line = "";
-		File f1 = new File("data/" + strTableName + ".csv");
+		File f1 = new File(strTableName + ".class");
 		FileReader fr = new FileReader(f1);
 		BufferedReader br = new BufferedReader(fr);
 		while ((line = br.readLine()) != null) {
