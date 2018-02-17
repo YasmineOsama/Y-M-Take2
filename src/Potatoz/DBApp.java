@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -15,6 +16,8 @@ public class DBApp {
 	static StringBuilder sb;
 	File location;
 	static HashMap<String, Hashtable<String, String>> restrictions;
+	static Hashtable<String, File> files;
+	static Hashtable<String, Page> pages;
 
 	public static boolean contains(Object[] objs, Object obj) {
 		for (int i = 0; i < objs.length; i++) {
@@ -90,22 +93,26 @@ public class DBApp {
 		fw.write(sb2.toString());
 		fw.write("\n");
 		fw.close();
+		files = new Hashtable<String, File>();
+		pages = new Hashtable<String, Page>();
 	}
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws IOException {
+		//		Hashtable<String, String> copy = new Hashtable<String, String>();
 		if (restrictions.containsKey(strTableName)) {
 			System.out.println("Table already exists");
 		} else {
 			restrictions.put(strTableName, htblColNameType);
 			String keyType = htblColNameType.get(strClusteringKeyColumn);
-			// @SuppressWarnings("unchecked")
-			// Set<String> temp = ((Hashtable<String, String>)
-			// htblColNameType.clone()).keySet();
-			// temp.remove(strClusteringKeyColumn);
+			//			copy.put(keyType, htblColNameType.get(strClusteringKeyColumn));
+			//			htblColNameType.remove(strClusteringKeyColumn);
 
-			// writer = new PrintWriter(new File("data/" + strTableName +
-			// ".csv"));
+			//			for(int i; i < htblColNameType.size(); i++) {
+			//				htblColNameType.remove(strClusteringKeyColumn);
+			//			}
+
+
 			// sb = new StringBuilder();
 			// sb.append(strClusteringKeyColumn);
 			// sb.append(",");
@@ -115,18 +122,22 @@ public class DBApp {
 			//
 			// writer.write(sb.toString());
 			// writer.close();
+			files.put(strTableName, new File("data/" + strTableName +
+					".class"));
+			pages.put(strTableName, new Page());
 
-			List<String> col = Arrays.asList(sb.toString().replaceAll("\\s+", "").split(","));
-			for (int i = 0; i < col.size(); i++) {
-				String type = "";
-				if (strClusteringKeyColumn.equals(col.get(i))) {
-					type = keyType;
-				} else {
-					type = htblColNameType.get(col.get(i));
-				}
-				metadata(strTableName, col.get(i), type, strClusteringKeyColumn.equals(col.get(i)), false);
-				writeData(strTableName, strClusteringKeyColumn, htblColNameType);
-			}
+
+			//List<String> col = Arrays.asList(sb.toString().replaceAll("\\s+", "").split(","));
+//			for (int i = 0; i < col.size(); i++) {
+//				String type = "";
+//				if (strClusteringKeyColumn.equals(col.get(i))) {
+//					type = keyType;
+//				} else {
+//					type = htblColNameType.get(col.get(i));
+//				}
+//				metadata(strTableName, col.get(i), type, strClusteringKeyColumn.equals(col.get(i)), false);
+//				writeData(strTableName, strClusteringKeyColumn, htblColNameType);
+//			}
 		}
 
 	}
@@ -154,18 +165,25 @@ public class DBApp {
 
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws IOException {
 		sb = new StringBuilder();
-		Object[] keys = htblColNameValue.keySet().toArray();
-		Object value;
-		for (int i = 0; i < keys.length; i++) {
-			value = htblColNameValue.get(keys[i]);
-			if (value.getClass().toString().substring(6).equals(restrictions.get(strTableName).get(keys[i]))) {
-				sb.append(value);
-				if (i < keys.length - 1)
-					sb.append(",");
-			} else
-				return;
-		}
-		modify(strTableName, sb.toString());
+		pages.get(strTableName).add(htblColNameValue);
+		FileOutputStream fos = new FileOutputStream(files.get(strTableName));
+		ObjectOutputStream oos = new ObjectOutputStream(fos);
+		oos.writeObject(pages.get(strTableName));
+		oos.close();
+		
+
+		//		Object[] keys = htblColNameValue.keySet().toArray();
+		//		Object value;
+		//		for (int i = 0; i < keys.length; i++) {
+		//			value = htblColNameValue.get(keys[i]);
+		//			if (value.getClass().toString().substring(6).equals(restrictions.get(strTableName).get(keys[i]))) {
+		//				sb.append(value);
+		//				if (i < keys.length - 1)
+		//					sb.append(",");
+		//			} else
+		//				return;
+		//		}
+		//		modify(strTableName, sb.toString());
 	}
 
 	public void updateTable(String strTableName, String strKey, Hashtable<String, Object> htblColNameValue) {
@@ -182,19 +200,18 @@ public class DBApp {
 	public static void main(String[] args) throws IOException {
 		DBApp app = new DBApp();
 		app.init();
-		// String strTableName = "Students";
-		// Hashtable htblColNameType = new Hashtable();
-		// htblColNameType.put("id", "java.lang.Integer");
-		// htblColNameType.put("name", "java.lang.String");
-		// htblColNameType.put("gpa", "java.lang.Double");
-		// createTable(strTableName, "id", htblColNameType);
-		//
-		// app.createTable(strTableName, "id", htblColNameType);
-		// Hashtable htblColNameValue = new Hashtable();
-		// htblColNameValue.put("id", new Integer(2343432));
-		// htblColNameValue.put("name", new String("Ahmed Noor"));
-		// htblColNameValue.put("gpa", new Double(0.95));
-		// app.insertIntoTable(strTableName, htblColNameValue);
+		 String strTableName = "Students";
+		 Hashtable htblColNameType = new Hashtable();
+		 htblColNameType.put("id", "java.lang.Integer");
+		 htblColNameType.put("name", "java.lang.String");
+		 htblColNameType.put("gpa", "java.lang.Double");
+		
+		 app.createTable(strTableName, "id", htblColNameType);
+		 Hashtable htblColNameValue = new Hashtable();
+		 htblColNameValue.put("id", new Integer(2343432));
+		 htblColNameValue.put("name", new String("Ahmed Noor"));
+		 htblColNameValue.put("gpa", new Double(0.95));
+		 app.insertIntoTable(strTableName, htblColNameValue);
 		// htblColNameValue.clear();
 		// htblColNameValue.put("id", new Integer(5674567));
 		// htblColNameValue.put("name", new String("Dalia Noor"));

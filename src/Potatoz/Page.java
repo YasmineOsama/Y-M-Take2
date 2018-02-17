@@ -3,6 +3,7 @@ package Potatoz;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -17,13 +18,13 @@ public class Page implements Serializable{
 	public ArrayList<Hashtable<String, Object>> page;
 	public int max;
 	public static String tableName;
-	public Page(String tableName) throws FileNotFoundException {
+	public Page() throws IOException {
 		page = new ArrayList<Hashtable<String,Object>>();
 		File config = new File("config/DBApp.config");
 		FileReader read = new FileReader(config);
 		Properties maxPage = new Properties();
-		this.tableName = tableName;
-		max = 200;
+		maxPage.load(read);
+		max = Integer.parseInt(maxPage.getProperty("MaximumRowsCountinPage"));
 
 	}
 	public void add(Hashtable<String, Object> row) {
