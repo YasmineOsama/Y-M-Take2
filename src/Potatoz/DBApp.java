@@ -3,11 +3,11 @@ package Potatoz;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringBufferInputStream;
 import java.util.*;
 
 public class DBApp {
@@ -77,6 +77,10 @@ public class DBApp {
 		new File("classes").mkdirs();
 		new File("config").mkdirs();
 		new File("config/DBApp.config").createNewFile();
+		Properties prop1 = new Properties();
+		prop1.setProperty("MaximumRowsCountinPage", "200");
+		prop1.setProperty("BRINSize", "15");
+		prop1.store(new FileOutputStream("config/DBApp.config"), "MaximumRowsCountinPage as the name indicates specifies the maximum number of rows in a page. BRINSize specifies the count of values that could be stored in a single BRIN file.");
 		restrictions = new HashMap<String, Hashtable<String, String>>();
 		String title = "Table Name, Column Name, Column Type, Key, Indexed";
 		String fileString = "data/metadata.csv";
@@ -90,26 +94,27 @@ public class DBApp {
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws IOException {
-		if(restrictions.containsKey(strTableName)) {
+		if (restrictions.containsKey(strTableName)) {
 			System.out.println("Table already exists");
-		}
-		else {
+		} else {
 			restrictions.put(strTableName, htblColNameType);
 			String keyType = htblColNameType.get(strClusteringKeyColumn);
-			//@SuppressWarnings("unchecked")
-			//Set<String> temp = ((Hashtable<String, String>) htblColNameType.clone()).keySet();
-			//temp.remove(strClusteringKeyColumn);
+			// @SuppressWarnings("unchecked")
+			// Set<String> temp = ((Hashtable<String, String>)
+			// htblColNameType.clone()).keySet();
+			// temp.remove(strClusteringKeyColumn);
 
-			//		writer = new PrintWriter(new File("data/" + strTableName + ".csv"));
-			//		sb = new StringBuilder();
-			//		sb.append(strClusteringKeyColumn);
-			//		sb.append(",");
-			//		String htbl = temp.toString();
-			//		htbl = htbl.substring(1, htbl.length() - 1);
-			//		sb.append(htbl);
+			// writer = new PrintWriter(new File("data/" + strTableName +
+			// ".csv"));
+			// sb = new StringBuilder();
+			// sb.append(strClusteringKeyColumn);
+			// sb.append(",");
+			// String htbl = temp.toString();
+			// htbl = htbl.substring(1, htbl.length() - 1);
+			// sb.append(htbl);
 			//
-			//		writer.write(sb.toString());
-			//		writer.close();
+			// writer.write(sb.toString());
+			// writer.close();
 
 			List<String> col = Arrays.asList(sb.toString().replaceAll("\\s+", "").split(","));
 			for (int i = 0; i < col.size(); i++) {
@@ -126,12 +131,9 @@ public class DBApp {
 
 	}
 
-	private static void writeData(String strTableName,
-			String strClusteringKeyColumn,
+	private static void writeData(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) {
-		
-		
-		
+
 	}
 
 	public static void metadata(String TableName, String ColName, String ColType, Boolean Key, Boolean index)
@@ -180,34 +182,34 @@ public class DBApp {
 	public static void main(String[] args) throws IOException {
 		DBApp app = new DBApp();
 		app.init();
-		//		String strTableName = "Students";
-		//		Hashtable htblColNameType = new Hashtable();
-		//		htblColNameType.put("id", "java.lang.Integer");
-		//		htblColNameType.put("name", "java.lang.String");
-		//		htblColNameType.put("gpa", "java.lang.Double");
-		//		createTable(strTableName, "id", htblColNameType);
+		// String strTableName = "Students";
+		// Hashtable htblColNameType = new Hashtable();
+		// htblColNameType.put("id", "java.lang.Integer");
+		// htblColNameType.put("name", "java.lang.String");
+		// htblColNameType.put("gpa", "java.lang.Double");
+		// createTable(strTableName, "id", htblColNameType);
 		//
-		//		app.createTable(strTableName, "id", htblColNameType);
-		//		Hashtable htblColNameValue = new Hashtable();
-		//		htblColNameValue.put("id", new Integer(2343432));
-		//		htblColNameValue.put("name", new String("Ahmed Noor"));
-		//		htblColNameValue.put("gpa", new Double(0.95));
-		//		app.insertIntoTable(strTableName, htblColNameValue);
-		//		htblColNameValue.clear();
-		//		htblColNameValue.put("id", new Integer(5674567));
-		//		htblColNameValue.put("name", new String("Dalia Noor"));
-		//		htblColNameValue.put("gpa", new Double(1.25));
-		//		app.insertIntoTable(strTableName, htblColNameValue);
-		//		htblColNameValue.clear();
-		//		htblColNameValue.put("id", new Integer(23498));
-		//		htblColNameValue.put("name", new String("John Noor"));
-		//		htblColNameValue.put("gpa", new Double(1.5));
-		//		app.insertIntoTable(strTableName, htblColNameValue);
-		//		htblColNameValue.clear();
-		//		htblColNameValue.put("id", new Integer(78452));
-		//		htblColNameValue.put("name", new String("Zaky Noor"));
-		//		htblColNameValue.put("gpa", new Double(0.88));
-		//		app.insertIntoTable(strTableName, htblColNameValue);
+		// app.createTable(strTableName, "id", htblColNameType);
+		// Hashtable htblColNameValue = new Hashtable();
+		// htblColNameValue.put("id", new Integer(2343432));
+		// htblColNameValue.put("name", new String("Ahmed Noor"));
+		// htblColNameValue.put("gpa", new Double(0.95));
+		// app.insertIntoTable(strTableName, htblColNameValue);
+		// htblColNameValue.clear();
+		// htblColNameValue.put("id", new Integer(5674567));
+		// htblColNameValue.put("name", new String("Dalia Noor"));
+		// htblColNameValue.put("gpa", new Double(1.25));
+		// app.insertIntoTable(strTableName, htblColNameValue);
+		// htblColNameValue.clear();
+		// htblColNameValue.put("id", new Integer(23498));
+		// htblColNameValue.put("name", new String("John Noor"));
+		// htblColNameValue.put("gpa", new Double(1.5));
+		// app.insertIntoTable(strTableName, htblColNameValue);
+		// htblColNameValue.clear();
+		// htblColNameValue.put("id", new Integer(78452));
+		// htblColNameValue.put("name", new String("Zaky Noor"));
+		// htblColNameValue.put("gpa", new Double(0.88));
+		// app.insertIntoTable(strTableName, htblColNameValue);
 	}
 
 }
