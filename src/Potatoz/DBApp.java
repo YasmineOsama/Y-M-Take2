@@ -170,7 +170,7 @@ public class DBApp {
 		Page temp = (Page) (pages.get(strTableName).getLast());
 		if (temp.full()) {
 			temp = new Page();
-			pages.get(strTableName).add(temp);
+			p.add(temp);
 		}
 		Object[] keys = htblColNameValue.keySet().toArray();
 		Object value;
