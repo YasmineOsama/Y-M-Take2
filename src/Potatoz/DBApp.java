@@ -109,6 +109,41 @@ public class DBApp {
 			LinkedList<Page> temp = new LinkedList<Page>();
 			temp.add(new Page());
 			pages.put(strTableName, temp);
+			//			copy.put(keyType, htblColNameType.get(strClusteringKeyColumn));
+			//			htblColNameType.remove(strClusteringKeyColumn);
+
+			//			for(int i; i < htblColNameType.size(); i++) {
+			//				htblColNameType.remove(strClusteringKeyColumn);
+			//			}
+
+
+			// sb = new StringBuilder();
+			// sb.append(strClusteringKeyColumn);
+			// sb.append(",");
+			// String htbl = temp.toString();
+			// htbl = htbl.substring(1, htbl.length() - 1);
+			// sb.append(htbl);
+			//
+			// writer.write(sb.toString());
+			// writer.close();
+			files.put(strTableName, new File("data/" + strTableName +
+					".class"));
+			LinkedList<Page> tempList = new LinkedList<Page>();
+			tempList.add(new Page());
+			pages.put(strTableName, tempList);
+
+
+			//List<String> col = Arrays.asList(sb.toString().replaceAll("\\s+", "").split(","));
+//			for (int i = 0; i < col.size(); i++) {
+//				String type = "";
+//				if (strClusteringKeyColumn.equals(col.get(i))) {
+//					type = keyType;
+//				} else {
+//					type = htblColNameType.get(col.get(i));
+//				}
+//				metadata(strTableName, col.get(i), type, strClusteringKeyColumn.equals(col.get(i)), false);
+//				writeData(strTableName, strClusteringKeyColumn, htblColNameType);
+//			}
 		}
 
 	}
