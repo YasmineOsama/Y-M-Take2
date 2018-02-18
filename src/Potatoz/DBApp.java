@@ -18,6 +18,7 @@ public class DBApp {
 	static HashMap<String, Hashtable<String, String>> restrictions;
 	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
+	static Hashtable<String, HashMap<String, LinkedList<Object>>> unikeys;
 
 	public static boolean contains(Object[] objs, Object obj) {
 		for (int i = 0; i < objs.length; i++) {
@@ -96,6 +97,7 @@ public class DBApp {
 		fw.close();
 		files = new Hashtable<String, LinkedList<File>>();
 		pages = new Hashtable<String, LinkedList<Page>>();
+		unikeys = new Hashtable<String, HashMap<String, LinkedList<Object>>>();
 	}
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
@@ -123,6 +125,11 @@ public class DBApp {
 			temppageList.add(new Page());
 			files.put(strTableName, tempfileList);
 			pages.put(strTableName, temppageList);
+			HashMap<String, LinkedList<Object>> tempunikey = new HashMap<String, LinkedList<Object>>();
+			tempunikey.put(strClusteringKeyColumn, new LinkedList<Object>());
+			unikeys.put(strTableName, tempunikey); // Unique keys for each
+													// record saved for
+													// further insertions.
 		}
 	}
 
@@ -143,6 +150,9 @@ public class DBApp {
 	}
 
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws IOException {
+		HashMap<String, LinkedList<Object>> tempunikey = unikeys.get(strTableName);
+		String primkeys = (String) unikeys.get(strTableName).keySet().toArray()[0];
+		LinkedList<Object> objs = tempunikey.get(primkeys);
 		LinkedList<Page> p = pages.get(strTableName);
 		LinkedList<File> f = files.get(strTableName);
 		Page tempPage = pages.get(strTableName).getLast();
@@ -164,10 +174,20 @@ public class DBApp {
 				return;
 			}
 		}
-		tempPage.add(htblColNameValue);
+		for (Object object : objs) { // Assuring each record has a unique key in
+										// the entire table.
+			if (htblColNameValue.get(primkeys).equals(object)) {
+				System.out.println("Record with a similar id exists.");
+				return;
+			}
+		}
+		objs.add(htblColNameValue.get(primkeys)); // Record's key added to the
+													// LinkedList<Object>.
+		tempPage.add(htblColNameValue); // Record added to the page.
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast(), true));
 		oos.writeObject(tempPage); // Record saved in the .class file.
 		oos.close();
+
 	}
 
 	public void updateTable(String strTableName, String strKey, Hashtable<String, Object> htblColNameValue) {
@@ -193,6 +213,7 @@ public class DBApp {
 		app.createTable(strTableName, "id", htblColNameType);
 		Hashtable htblColNameValue = new Hashtable();
 		htblColNameValue.put("id", new Integer(2343432));
+		// htblColNameValue.put("id", new Integer(5674567));
 		htblColNameValue.put("name", new String("Ahmed Noor"));
 		htblColNameValue.put("gpa", new Double(0.95));
 		app.insertIntoTable(strTableName, htblColNameValue);
