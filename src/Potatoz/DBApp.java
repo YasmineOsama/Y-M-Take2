@@ -16,7 +16,7 @@ public class DBApp {
 	static StringBuilder sb;
 	File location;
 	static HashMap<String, Hashtable<String, String>> restrictions;
-	static Hashtable<String, File> files;
+	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
 
 	public static boolean contains(Object[] objs, Object obj) {
@@ -94,7 +94,7 @@ public class DBApp {
 		fw.write(sb2.toString());
 		fw.write("\n");
 		fw.close();
-		files = new Hashtable<String, File>();
+		files = new Hashtable<String, LinkedList<File>>();
 		pages = new Hashtable<String, LinkedList<Page>>();
 	}
 
@@ -104,48 +104,26 @@ public class DBApp {
 			System.out.println("Table already exists");
 		} else {
 			restrictions.put(strTableName, htblColNameType);
-			String keyType = htblColNameType.get(strClusteringKeyColumn);
-			files.put(strTableName, new File("data/" + strTableName + ".class"));
-			LinkedList<Page> temp = new LinkedList<Page>();
-			temp.add(new Page());
-			pages.put(strTableName, temp);
-			//			copy.put(keyType, htblColNameType.get(strClusteringKeyColumn));
-			//			htblColNameType.remove(strClusteringKeyColumn);
-
-			//			for(int i; i < htblColNameType.size(); i++) {
-			//				htblColNameType.remove(strClusteringKeyColumn);
-			//			}
-
-
-			// sb = new StringBuilder();
-			// sb.append(strClusteringKeyColumn);
-			// sb.append(",");
-			// String htbl = temp.toString();
-			// htbl = htbl.substring(1, htbl.length() - 1);
-			// sb.append(htbl);
-			//
-			// writer.write(sb.toString());
-			// writer.close();
-			files.put(strTableName, new File("data/" + strTableName +
-					".class"));
-			LinkedList<Page> tempList = new LinkedList<Page>();
-			tempList.add(new Page());
-			pages.put(strTableName, tempList);
-
-
-			//List<String> col = Arrays.asList(sb.toString().replaceAll("\\s+", "").split(","));
-//			for (int i = 0; i < col.size(); i++) {
-//				String type = "";
-//				if (strClusteringKeyColumn.equals(col.get(i))) {
-//					type = keyType;
-//				} else {
-//					type = htblColNameType.get(col.get(i));
-//				}
-//				metadata(strTableName, col.get(i), type, strClusteringKeyColumn.equals(col.get(i)), false);
-//				writeData(strTableName, strClusteringKeyColumn, htblColNameType);
-//			}
+			LinkedList<File> tempfileList = new LinkedList<File>(); // LinkedList
+																	// keeping
+																	// track for
+																	// all
+																	// .class
+																	// files for
+																	// this
+																	// table.
+			LinkedList<Page> temppageList = new LinkedList<Page>(); // LinkedList
+																	// keeping
+																	// track for
+																	// all pages
+																	// created
+																	// for this
+																	// table.
+			tempfileList.add(new File("classes/" + strTableName + ".class"));
+			temppageList.add(new Page());
+			files.put(strTableName, tempfileList);
+			pages.put(strTableName, temppageList);
 		}
-
 	}
 
 	public static void metadata(String TableName, String ColName, String ColType, Boolean Key, Boolean index)
@@ -165,24 +143,30 @@ public class DBApp {
 	}
 
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws IOException {
-		sb = new StringBuilder();
 		LinkedList<Page> p = pages.get(strTableName);
-		Page temp = (Page) (pages.get(strTableName).getLast());
-		if (temp.full()) {
-			temp = new Page();
-			p.add(temp);
+		LinkedList<File> f = files.get(strTableName);
+		Page tempPage = pages.get(strTableName).getLast();
+		File tempFile = files.get(strTableName).getLast();
+		if (tempPage.full()) {
+			tempPage = new Page();
+			p.add(tempPage); // New page created and added at the end of the
+								// LinkedList concerning the table.
+			tempFile = new File("classes/" + strTableName + f.size() + ".class");
+			f.add(tempFile); // New .class file added at the end of the
+								// LinkedList concerning the table.
 		}
 		Object[] keys = htblColNameValue.keySet().toArray();
 		Object value;
-		for (int i = 0; i < keys.length; i++) {
+		for (int i = 0; i < keys.length; i++) { // Assuring each column in the
+												// record has a valid type.
 			value = htblColNameValue.get(keys[i]);
 			if (!value.getClass().toString().substring(6).equals(restrictions.get(strTableName).get(keys[i]))) {
 				return;
 			}
 		}
-		temp.add(htblColNameValue);
-		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName), true));
-		oos.writeObject(temp);
+		tempPage.add(htblColNameValue);
+		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast(), true));
+		oos.writeObject(tempPage); // Record saved in the .class file.
 		oos.close();
 	}
 
@@ -217,16 +201,16 @@ public class DBApp {
 		htblColNameValue.put("name", new String("Dalia Noor"));
 		htblColNameValue.put("gpa", new Double(1.25));
 		app.insertIntoTable(strTableName, htblColNameValue);
-		// htblColNameValue.clear();
-		// htblColNameValue.put("id", new Integer(23498));
-		// htblColNameValue.put("name", new String("John Noor"));
-		// htblColNameValue.put("gpa", new Double(1.5));
-		// app.insertIntoTable(strTableName, htblColNameValue);
-		// htblColNameValue.clear();
-		// htblColNameValue.put("id", new Integer(78452));
-		// htblColNameValue.put("name", new String("Zaky Noor"));
-		// htblColNameValue.put("gpa", new Double(0.88));
-		// app.insertIntoTable(strTableName, htblColNameValue);
+		htblColNameValue.clear();
+		htblColNameValue.put("id", new Integer(23498));
+		htblColNameValue.put("name", new String("John Noor"));
+		htblColNameValue.put("gpa", new Double(1.5));
+		app.insertIntoTable(strTableName, htblColNameValue);
+		htblColNameValue.clear();
+		htblColNameValue.put("id", new Integer(78452));
+		htblColNameValue.put("name", new String("Zaky Noor"));
+		htblColNameValue.put("gpa", new Double(0.88));
+		app.insertIntoTable(strTableName, htblColNameValue);
 	}
 
 }
