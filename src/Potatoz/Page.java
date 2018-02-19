@@ -7,18 +7,17 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Properties;
 
-
 public class Page implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public ArrayList<Object []> page;
+	public ArrayList<Couple[]> page;
 	public int max;
 	public static String tableName;
 
 	public Page() throws IOException {
-		page = new ArrayList<Object []>();
+		page = new ArrayList<Couple[]>();
 		File config = new File("config/DBApp.config");
 		FileReader read = new FileReader(config);
 		Properties maxPage = new Properties();
@@ -27,12 +26,28 @@ public class Page implements Serializable {
 		max = 1;
 	}
 
-	public void add(Object [] row) {
+	public void add(Couple[] row) {
 		page.add(row);
 	}
 
+	public ArrayList<Couple[]> getPage() {
+		return page;
+	}
+
+	public void setPage(ArrayList<Couple[]> page) {
+		this.page = page;
+	}
+
+	public static String getTableName() {
+		return tableName;
+	}
+
+	public static void setTableName(String tableName) {
+		Page.tableName = tableName;
+	}
+
 	public boolean full() {
-		if(page.size() == max) {
+		if (page.size() == max) {
 			return true;
 		}
 		return false;
