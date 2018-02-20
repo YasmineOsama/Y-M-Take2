@@ -1,36 +1,20 @@
 package Potatoz;
 
-import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.time.Instant;
 import java.util.*;
 
 public class DBApp {
-	static PrintWriter writer;
 	static StringBuilder sb;
-	File location;
-	static Hashtable<String, Boolean> tableNames;
 	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
-	static Hashtable<String, HashMap<String, LinkedList<Object>>> unikeys;
-
-	public static boolean contains(Object[] objs, Object obj) {
-		for (int i = 0; i < objs.length; i++) {
-			if (obj.equals(objs))
-				return true;
-		}
-		return false;
-	}
 
 	public void init() throws IOException {
 		new File("data").mkdirs();
@@ -39,7 +23,7 @@ public class DBApp {
 		new File("classes").mkdirs();
 		new File("config").mkdirs();
 		new File("config/DBApp.config").createNewFile();
-		new File("classes/tables.class").createNewFile();
+		new File("classes/metadata.class").createNewFile();
 		/*
 		 * Folders and files added for the beginning of the database
 		 * initialization.
@@ -48,8 +32,8 @@ public class DBApp {
 		prop.setProperty("MaximumRowsCountinPage", "200");
 		prop.setProperty("BRINSize", "15");
 		prop.store(new FileOutputStream("config/DBApp.config"),
-				"MaximumRowsCountinPage as the name indicates specifies the maximum number of rows in a page. BRINSize specifies the count of values that could be stored in a single BRIN file.");
-		tableNames = new Hashtable<String, Boolean>();
+				"MaximumRowsCountinPage as the name indicates specifies the maximum number of rows in a page."
+						+ " BRINSize specifies the count of values that could be stored in a single BRIN file.");
 		String title = "Table Name, Column Name, Column Type, Key, Indexed";
 		String fileString = "data/metadata.csv";
 		StringBuilder sb2 = new StringBuilder();
@@ -60,35 +44,35 @@ public class DBApp {
 		fw.close();
 		files = new Hashtable<String, LinkedList<File>>();
 		pages = new Hashtable<String, LinkedList<Page>>();
-		unikeys = new Hashtable<String, HashMap<String, LinkedList<Object>>>();
 	}
 
 	public static void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws IOException, ClassNotFoundException {
+		HashMap<String, Couple[]> metaData = new HashMap<String, Couple[]>();
+		FileInputStream fis = new FileInputStream("classes/metadata.class");
+		if(fis.available() > 1) {
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			@SuppressWarnings("unchecked")
+			HashMap<String, Couple[]> tempMetaData = (HashMap<String, Couple[]>) (ois.readObject());
+			if(tempMetaData!=null) {
+				metaData = tempMetaData;
+			}
+			ois.close();
+		}
+
 		if (tableExists(strTableName)) {
 			System.out.println("Table already exists");
 		} else {
-			LinkedList<File> tempfileList = new LinkedList<File>(); // LinkedList
-																	// keeping
-																	// track for
-																	// all
-																	// .class
-																	// files for
-																	// this
-																	// table.
-			LinkedList<Page> temppageList = new LinkedList<Page>(); // LinkedList
-																	// keeping
-																	// track for
-																	// all pages
-																	// created
-																	// for this
-																	// table.
-			Couple[] row = new Couple[htblColNameType.size() + 1]; // Adding
-																	// columns
-																	// titles.
+			new File("classes/"+ strTableName + "files.class").createNewFile();
+			new File("classes/"+ strTableName + "pages.class").createNewFile();
+
+			LinkedList<File> tempfileList = new LinkedList<File>(); // LinkedList keeping track for all
+			// .class files for this table.
+			LinkedList<Page> temppageList = new LinkedList<Page>(); // LinkedList keeping track for all pages
+			// created for this table.
+			Couple[] row = new Couple[htblColNameType.size() + 2]; // Adding columns data.
 			Enumeration<String> keys = htblColNameType.keys();
-			row[0] = new Couple(); // Couple is a class with two instance
-									// variables, a key pointing to a value.
+			row[0] = new Couple(); // Couple is a class with two instance variables, a key pointing to a value.
 			row[0].setKey(strClusteringKeyColumn);
 			row[0].setValue(htblColNameType.get(strClusteringKeyColumn));
 			for (int i = 1; keys.hasMoreElements() && i < htblColNameType.size();) {
@@ -101,42 +85,33 @@ public class DBApp {
 				}
 			}
 			row[htblColNameType.size()] = new Couple();
+			row[htblColNameType.size() + 1] = new Couple();
 			row[htblColNameType.size()].setKey("TouchDate");
 			row[htblColNameType.size()].setValue("java.time.Instant");
-			new File("classes/" + strTableName + ".class").createNewFile(); // Contains
-																			// info
-																			// about
-																			// the
-																			// table's
-																			// metadata.
-			tempfileList.add(new File("classes/" + strTableName + "Data.class")); // File
-																					// added
-																					// in
-																					// the
-																					// list
-																					// of
-																					// files
-																					// for
-																					// the
-																					// table.
+			row[htblColNameType.size() +1].setKey("primaryKey");
+			row[htblColNameType.size() +1].setValue(strClusteringKeyColumn);
+
+
+			metaData.put(strTableName, row);
+			File t = new File("classes/" + strTableName + ".class");
+			t.createNewFile();
+			tempfileList.add(t); // File added in the list
+			// of files for the table.
 			Page tempPage = new Page();
 			temppageList.add(tempPage);
 			files.put(strTableName, tempfileList);
 			pages.put(strTableName, temppageList);
 			HashMap<String, LinkedList<Object>> tempunikey = new HashMap<String, LinkedList<Object>>();
 			tempunikey.put(strClusteringKeyColumn, new LinkedList<Object>());
-			unikeys.put(strTableName, tempunikey); // Unique keys for each
-													// record saved for futur
-													// insertions.
 			ObjectOutputStream oos = new ObjectOutputStream(
-					new FileOutputStream("classes/" + strTableName + ".class", true));
-			oos.writeObject(row); // Record saved in the .class file. Couple[]
-									// which represents the restrictions which
-									// gets written on the disk.
+					new FileOutputStream("classes/metadata.class"));
+			oos.writeObject(metaData); // Saves metadata in .class file for future easier access
+			//oos.flush();
 			oos.close();
 
 			String keyType = htblColNameType.get(strClusteringKeyColumn); // Metadata
-																			// part.
+			// part.
+			@SuppressWarnings("unchecked")
 			Set<String> temp = ((Hashtable<String, String>) htblColNameType.clone()).keySet();
 			temp.remove(strClusteringKeyColumn);
 			sb = new StringBuilder();
@@ -178,14 +153,13 @@ public class DBApp {
 
 	@SuppressWarnings("unchecked")
 	public static boolean tableExists(String strTableName) throws IOException, ClassNotFoundException {
-		List<Hashtable<String, Boolean>> tables = new ArrayList<Hashtable<String, Boolean>>();
-
+		HashMap<String, Couple[]> metaData = new HashMap<String, Couple[]>();
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream("classes/tables.class");
+			fis = new FileInputStream("classes/metadata.class");
 			while (true) {
 				ObjectInputStream ois = new ObjectInputStream(fis);
-				tables.add((Hashtable<String, Boolean>) ois.readObject());
+				metaData = (HashMap<String, Couple[]>) ois.readObject();
 			}
 		} catch (EOFException ignored) {
 			// as expected
@@ -193,90 +167,127 @@ public class DBApp {
 			if (fis != null)
 				fis.close();
 		}
-		for (int i = 0; i < tables.size(); i++) {
-			if (tables.get(i).containsKey(strTableName)) {
-				return true;
-			}
-		}
-		tableNames.put(strTableName, true);
-		FileOutputStream fos = null;
-		try {
-			fos = new FileOutputStream("classes/tables.class");
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(tableNames);
-			oos.close();
-		} finally {
-			if (fos != null)
-				fos.close();
+		if (metaData.containsKey(strTableName)) {
+			return true;
 		}
 		return false;
 	}
 
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws IOException, ClassNotFoundException {
-		FileInputStream fis = new FileInputStream("classes/" + strTableName + ".class");
+		FileInputStream fis = new FileInputStream("classes/metadata.class");
 		ObjectInputStream ois = new ObjectInputStream(fis);
-		Couple[] tableData = (Couple[]) (ois.readObject()); // Table's
-															// keys
-															// and
-															// types
-															// for
-															// insertion
-															// check.
-		Couple[] rowData = new Couple[tableData.length]; // Array of Couples to
-															// be passed and
-															// written on the
-															// disk.
-		HashMap<String, LinkedList<Object>> tempunikey = unikeys.get(strTableName);
-		String primkeys = (String) unikeys.get(strTableName).keySet().toArray()[0];
-		LinkedList<Object> objs = tempunikey.get(primkeys);
-		LinkedList<Page> p = pages.get(strTableName);
-		LinkedList<File> f = files.get(strTableName);
-		Page tempPage = pages.get(strTableName).getLast();
-		File tempFile = files.get(strTableName).getLast();
-		if (tempPage.full()) {
-			tempPage = new Page();
-			p.add(tempPage); // New page created and added at the end of the
-								// LinkedList concerning the table.
-			tempFile = new File("classes/" + strTableName + "Data" + f.size() + ".class");
-			f.add(tempFile); // New .class file added at the end of the
-								// LinkedList concerning the table.
+		@SuppressWarnings("unchecked")
+		HashMap<String, Couple[]> metaData = (HashMap<String, Couple[]>) (ois.readObject());
+		ois.close();
+		if(!tableExists(strTableName)) {
+			System.out.println("Table doesn't exist");
 		}
-		Object[] keys = htblColNameValue.keySet().toArray();
-		Object value;
-		for (int i = 0; i < keys.length; i++) { // Assuring each column in the
-												// record has a valid type.
-			value = htblColNameValue.get(keys[i]);
-			Couple tempCoup = null;
-			for (int j = 0; j < tableData.length; j++) {
-				if (keys[i].equals(tableData[j].getKey())) {
-					tempCoup = tableData[j];
+		else {
+			FileInputStream fis1 = new FileInputStream("classes/"+ strTableName + ".class");
+			if(fis1.available() > 1) {
+				ObjectInputStream ois1 = new ObjectInputStream(fis1);
+				Page readPage = (Page) (ois1.readObject());
+				HashMap<Object, Couple[]> table = readPage.getPage();
+				ois1.close();
+				Object[] pkeys = table.keySet().toArray();
+				for(int i = 0; i < pkeys.length; i++) { // Assuring each record has a unique key in
+					// the entire table.
+					if (htblColNameValue.containsValue(pkeys[i])) {
+						System.out.println("Record with a similar id exists.");
+						return;
+					}
+				}
+			}
+			FileInputStream fis11 = new FileInputStream("classes/"+ strTableName + "files.class");
+			if(fis11.available() > 1) {
+				ObjectInputStream ois1 = new ObjectInputStream(fis11);
+				@SuppressWarnings("unchecked")
+				Hashtable<String, LinkedList<File>> tempFiles = (Hashtable<String, LinkedList<File>>) (ois1.readObject());
+				if(tempFiles!=null) {
+					files = tempFiles;
+				}
+				ois1.close();
+			}
+			FileInputStream fis111 = new FileInputStream("classes/"+ strTableName + "pages.class");
+			if(fis111.available() > 1) {
+				ObjectInputStream ois1 = new ObjectInputStream(fis111);
+				@SuppressWarnings("unchecked")
+				Hashtable<String, LinkedList<Page>> tempPages = (Hashtable<String, LinkedList<Page>>) (ois1.readObject());
+				if(tempPages!=null) {
+					pages = tempPages;
+				}
+				ois1.close();
+			}
+			Couple[] tableData = metaData.get(strTableName); // Table's keys and types
+			// for insertion check.
+			Couple[] rowData = new Couple[tableData.length - 1]; // Array of Couples to
+			// be passed and written on the disk.
+			LinkedList<Page> p = pages.get(strTableName);
+			LinkedList<File> f = files.get(strTableName);
+			Page tempPage = pages.get(strTableName).getLast();
+			File tempFile = files.get(strTableName).getLast();
+			Object[] keys = htblColNameValue.keySet().toArray();
+			Object value;
+			for (int i = 0; i < keys.length; i++) { // Assuring each column in the
+				// record has a valid type.
+				value = htblColNameValue.get(keys[i]);
+				Couple tempCoup = null;
+				for (int j = 0; j < tableData.length; j++) {
+					if (keys[i].equals(tableData[j].getKey())) {
+						tempCoup = tableData[j];
+						break;
+					}
+				}
+				if (!value.getClass().toString().substring(6).equals(tempCoup.getValue().toString())) {
+					return;
+				}
+				rowData[i] = new Couple();
+				rowData[i].setKey((String) keys[i]);
+				rowData[i].setValue(value);
+			}
+			if (tempPage.full()) {
+				tempPage = new Page();
+				p.add(tempPage); // New page created and added at the end of the
+				// LinkedList concerning the table.
+				tempFile = new File("classes/" + strTableName + f.size() + ".class");
+				f.add(tempFile); // New .class file added at the end of the
+				// LinkedList concerning the table.
+			}
+
+			rowData[rowData.length - 1] = new Couple();
+			rowData[rowData.length - 1].setKey("TouchDate");
+			rowData[rowData.length - 1].setValue(Instant.now());
+
+			Couple[] rowInfo = metaData.get(strTableName);
+			Object keyIndex = null;
+			Object primaryKey = null;
+
+			for(int i = 0; i < rowInfo.length; i++) {
+				if(rowInfo[i].getKey().equals("primaryKey")) {
+					keyIndex = rowInfo[i].getValue();
 					break;
 				}
 			}
-			if (!value.getClass().toString().substring(6).equals(tempCoup.getValue().toString())) {
-				return;
+			for(int i = 0; i < rowData.length; i++) {
+				if(rowData[i].getKey().equals(keyIndex)) {
+					primaryKey = rowData[i].getValue();
+					break;
+				}
 			}
-			rowData[i] = new Couple();
-			rowData[i].setKey((String) keys[i]);
-			rowData[i].setValue(value);
+			pages.put(strTableName, p);
+			files.put(strTableName, f);
+			tempPage.add(primaryKey, rowData); // Record added to the page.
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
+			oos.writeObject(tempPage); // Record saved in the .class file.
+			oos.close();
+			ObjectOutputStream oos1 = new ObjectOutputStream(new FileOutputStream("classes/"+ strTableName + "files.class"));
+			oos1.writeObject(files); 
+			oos1.close();
+			ObjectOutputStream oos11 = new ObjectOutputStream(new FileOutputStream("classes/"+ strTableName + "pages.class"));
+			oos11.writeObject(pages); 
+			oos11.close();
 		}
-		rowData[rowData.length - 1] = new Couple();
-		rowData[rowData.length - 1].setKey("TouchDate");
-		rowData[rowData.length - 1].setValue(Instant.now());
-		for (Object object : objs) { // Assuring each record has a unique key in
-			// the entire table.
-			if (htblColNameValue.get(primkeys).equals(object)) {
-				System.out.println("Record with a similar id exists.");
-				return;
-			}
-		}
-		objs.add(htblColNameValue.get(primkeys)); // Record's key added to
-													// the LinkedList<Object>.
-		tempPage.add(rowData); // Record added to the page.
-		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast(), true));
-		oos.writeObject(tempPage); // Record saved in the .class file.
-		oos.close();
 
 	}
 
@@ -286,78 +297,44 @@ public class DBApp {
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) {
 	}
 
+	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(String strTableName, String strColumnName, Object[] objarrValues,
 			String[] strarrOperators) {
 		return null;
 	}
-	// public void modify(String strTableName, String s) throws IOException {
-	// List<String> lines = new ArrayList<String>();
-	// String line = "";
-	// File f1 = new File(strTableName + ".class");
-	// FileReader fr = new FileReader(f1);
-	// BufferedReader br = new BufferedReader(fr);
-	// while ((line = br.readLine()) != null) {
-	// lines.add(line);
-	// }
-	// LinkedList<Double> ids = new LinkedList<Double>();
-	// for (int i = 1; i < lines.size(); i++) {
-	// ids.add(Double.parseDouble(lines.get(i).split(",")[0]));
-	// }
-	// ids.add(Double.parseDouble(s.split(",")[0]));
-	// Collections.sort(ids);
-	// fr.close();
-	// br.close();
-	// writer = new PrintWriter("data/" + strTableName + ".csv");
-	// String whole = lines.get(0) + '\n';
-	// String[] temp = new String[ids.size()];
-	// if (lines.size() > 1)
-	// for (int i = 0; i < ids.size();)
-	// for (int j = 1; j < lines.size() || !s.equals(""); j++) {
-	// if (s.split(",")[0].equals(ids.get(i) + "")) {
-	// whole += s.toString() + '\n';
-	// s = "";
-	// ids.remove(i);
-	// break;
-	// } else {
-	// temp = lines.get(j).split(",");
-	// if (temp[0].equals(ids.get(i) + "")) {
-	//
-	// whole += lines.get(j) + '\n';
-	// lines.remove(j);
-	// ids.remove(i);
-	// break;
-	// }
-	// }
-	// }
-	// else
-	// whole += s.toString() + '\n';
-	//
-	// writer.write(whole);
-	// writer.close();
-	// }
+
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		DBApp app = new DBApp();
 		app.init();
-		String strTableName = "Students";
-		Hashtable htblColNameType = new Hashtable();
-		htblColNameType.put("id", "java.lang.Integer");
-		htblColNameType.put("name", "java.lang.String");
-		htblColNameType.put("gpa", "java.lang.Double");
-
-		app.createTable(strTableName, "id", htblColNameType);
-
+		FileInputStream fis = new FileInputStream("classes/Students6.class");
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		Page p = (Page) ois.readObject();
+		HashMap<Object, Couple[]> metaData = p.getPage() ;
+		ois.close();
+		if(metaData != null) {
+			System.out.println(metaData.toString());
+			//System.out.println(metaData[0].getValue());
+		}
+		String strTableName = "Students6";
+		//		Hashtable htblColNameType = new Hashtable();
+		//		htblColNameType.put("id", "java.lang.Integer");
+		//		htblColNameType.put("name", "java.lang.String");
+		//		htblColNameType.put("gpa", "java.lang.Double");
+		//
+		//		app.createTable(strTableName, "id", htblColNameType);
+		//
 		Hashtable htblColNameValue = new Hashtable();
-		htblColNameValue.put("id", new Integer(2343432));
+		htblColNameValue.put("id", new Integer(1234));
 		htblColNameValue.put("name", new String("Ahmed Noor"));
 		htblColNameValue.put("gpa", new Double(0.95));
 		app.insertIntoTable(strTableName, htblColNameValue);
-		htblColNameValue.clear();
-		htblColNameValue.put("id", new Integer(5674567));
-		htblColNameValue.put("name", new String("Dalia Noor"));
-		htblColNameValue.put("gpa", new Double(1.25));
-		app.insertIntoTable(strTableName, htblColNameValue);
-		htblColNameValue.clear();
+		//		htblColNameValue.clear();
+		//		htblColNameValue.put("id", new Integer(5674567));
+		//		htblColNameValue.put("name", new String("Dalia Noor"));
+		//		htblColNameValue.put("gpa", new Double(1.25));
+		//		app.insertIntoTable(strTableName, htblColNameValue);
+		//		htblColNameValue.clear();
 		// htblColNameValue.put("id", new Integer(23498));
 		// htblColNameValue.put("name", new String("John Noor"));
 		// htblColNameValue.put("gpa", new Double(1.5));

@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Properties;
 
 public class Page implements Serializable {
@@ -12,29 +12,29 @@ public class Page implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public ArrayList<Couple[]> page;
+	public HashMap<Object, Couple[]> page;
 	public int max;
 	public static String tableName;
 
 	public Page() throws IOException {
-		page = new ArrayList<Couple[]>();
+		page = new HashMap<Object, Couple[]>();
 		File config = new File("config/DBApp.config");
 		FileReader read = new FileReader(config);
 		Properties maxPage = new Properties();
 		maxPage.load(read);
 		max = Integer.parseInt(maxPage.getProperty("MaximumRowsCountinPage"));
-		max = 1;
+		//max = 1;
 	}
 
-	public void add(Couple[] row) {
-		page.add(row);
+	public void add(Object pKey, Couple[] row) {
+		page.put(pKey, row);
 	}
 
-	public ArrayList<Couple[]> getPage() {
+	public HashMap<Object, Couple[]> getPage() {
 		return page;
 	}
 
-	public void setPage(ArrayList<Couple[]> page) {
+	public void setPage(HashMap<Object, Couple[]> page) {
 		this.page = page;
 	}
 

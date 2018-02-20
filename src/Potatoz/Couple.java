@@ -3,9 +3,13 @@ package Potatoz;
 import java.io.Serializable;
 
 public class Couple implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	String key;
 	Object value;
-	
+
 	public Couple() {
 		this.key = null;
 		this.value = null;
@@ -14,7 +18,7 @@ public class Couple implements Serializable {
 		this.key = key;
 		this.value = value;
 	}
-	
+
 	public String getKey() {
 		return key;
 	}
