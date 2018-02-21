@@ -10,6 +10,8 @@ public class DBAppTest {
 	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		DBApp app = new DBApp();
 		app.init();
+		System.out.println(
+				"**This test will show incorrect results if tried more than once or if classes/ directory and data/ directory are not empty**");
 		String strTableName = "Students";
 		System.out.println("- Trying to create a table 'Students'.");
 		Hashtable htblColNameType = new Hashtable();
