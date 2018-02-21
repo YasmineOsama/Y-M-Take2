@@ -16,9 +16,11 @@ public class DBApp {
 	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
 
-	/*
+	/**
 	 * Reading existing metadata previously written on disk for further table
 	 * creations.
+	 * 
+	 * Method with disk access to restore database checkpoints.
 	 */
 	public HashMap<String, Couple[]> readMetaData() throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream("classes/metadata.class");
@@ -33,8 +35,11 @@ public class DBApp {
 		return null;
 	}
 
-	/*
+	/**
 	 * Initializing database.
+	 * 
+	 * Method creates folder directories for proper data organization and
+	 * storing.
 	 */
 	public void init() throws IOException {
 		new File("data").mkdirs();
@@ -76,8 +81,16 @@ public class DBApp {
 		 */
 	}
 
-	/*
+	/**
 	 * On new table creation.
+	 * 
+	 * @param strTableName:
+	 *            Table name to be created.
+	 * @param strClusteringKeyColumn:
+	 *            Table column referring to the primary key of this table.
+	 * @param htblColNameType:
+	 *            Hashtable containing all columns with keys as the column names
+	 *            and values as the data type accepted for each column.
 	 */
 	public void createTable(String strTableName, String strClusteringKeyColumn,
 			Hashtable<String, String> htblColNameType) throws IOException, ClassNotFoundException {
@@ -91,7 +104,7 @@ public class DBApp {
 		 * otherwise creating a new metadata tracker.
 		 */
 		if (tableExists(strTableName)) {
-			System.out.println("Table already exists.");
+			System.out.println("From Database: Table already exists.");
 		} else {
 			new File("classes/" + strTableName + "files.class").createNewFile();
 			new File("classes/" + strTableName + "pages.class").createNewFile();
@@ -205,12 +218,24 @@ public class DBApp {
 					new FileOutputStream("classes/" + strTableName + "pages.class"));
 			oos11.writeObject(pages); // recording all pages of this table
 			oos11.close();
+			System.out.println("From Database: Table " + strTableName + " created and stored in the database.");
 		}
 
 	}
 
-	/*
+	/**
 	 * Method responsible for metadata.csv creation.
+	 * 
+	 * @param TableName:
+	 *            Table name to be written on the csv.
+	 * @param ColName:
+	 *            Column name to be written on the csv.
+	 * @param ColType:
+	 *            Column's content accepted data type to be written in the csv.
+	 * @param Key:
+	 *            Boolean indicating the primary key of the table.
+	 * @param index:
+	 *            Boolean indicating indexed content.
 	 */
 	public static void metadata(String TableName, String ColName, String ColType, Boolean Key, Boolean index)
 			throws IOException {
@@ -228,8 +253,13 @@ public class DBApp {
 	public void createBRINIndex(String strTableName, String strColName) {
 	}
 
-	/*
+	/**
 	 * Checker for previously similar created tables in the metadata.class.
+	 * 
+	 * @param strTableName:
+	 *            Table name received by the method which has access to the disk
+	 *            and re-reads the metadata to check if a table with similar
+	 *            name is created.
 	 */
 	public static boolean tableExists(String strTableName) throws IOException, ClassNotFoundException {
 		HashMap<String, Couple[]> metaData = new HashMap<String, Couple[]>();
@@ -252,9 +282,13 @@ public class DBApp {
 		return false;
 	}
 
-	/*
+	/**
 	 * Method for getting all files contributing in all the tables' data, null
 	 * if there's none.
+	 * 
+	 * @param strTableName:
+	 *            Table name received by the method which has access to the disk
+	 *            and return the stored written-on files for this table.
 	 */
 	public Hashtable<String, LinkedList<File>> readPageFiles(String strTableName)
 			throws IOException, ClassNotFoundException {
@@ -269,9 +303,13 @@ public class DBApp {
 		return null;
 	}
 
-	/*
+	/**
 	 * Method for getting all pages contributing in all the tables' data, null
 	 * if there's none.
+	 * 
+	 * @param strTableName:
+	 *            Table name received by the method which has access to the disk
+	 *            and return the stored written-on pages for this table.
 	 */
 	public Hashtable<String, LinkedList<Page>> readPagePages(String strTableName)
 			throws IOException, ClassNotFoundException {
@@ -286,8 +324,14 @@ public class DBApp {
 		return null;
 	}
 
-	/*
+	/**
 	 * On new record insertion.
+	 * 
+	 * @param strTableName:
+	 *            Table name to be used for insertion.
+	 * @param htblColNameValue:
+	 *            Hashtable containing all columns with keys as the column names
+	 *            and values as the object value for each column.
 	 */
 	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws IOException, ClassNotFoundException {
@@ -297,7 +341,7 @@ public class DBApp {
 		 */
 		HashMap<String, Couple[]> metaData = readMetaData();
 		if (!tableExists(strTableName)) {
-			System.out.println("Table doesn't exist");
+			System.out.println("From Database: Table doesn't exist");
 		} else {
 			FileInputStream fis = new FileInputStream("classes/" + strTableName + ".class");
 			/*
@@ -314,7 +358,7 @@ public class DBApp {
 				 */
 				for (int i = 0; i < pkeys.length; i++) {
 					if (htblColNameValue.containsValue(pkeys[i])) {
-						System.out.println("Record with a similar id exists.");
+						System.out.println("From Database: Record with a similar id exists.");
 						return;
 					}
 				}
@@ -331,19 +375,14 @@ public class DBApp {
 			if (tempPages != null) {
 				pages = tempPages;
 			}
-			Couple[] tableData = metaData.get(strTableName); // Table's keys and
-			// types
-			// retrieved for
-			// insertion
-			// checks.
-			Couple[] rowData = new Couple[tableData.length - 1]; // Array of
-			// Couples
-			// to be
-			// passed
-			// and
-			// written
-			// on the
-			// disk.
+			/*
+			 * Table's keys and types retrieved for insertion checks.
+			 */
+			Couple[] tableData = metaData.get(strTableName);
+			/*
+			 * Array of couples to be passed and written on the disk.
+			 */
+			Couple[] rowData = new Couple[tableData.length - 1];
 			LinkedList<Page> p = pages.get(strTableName);
 			LinkedList<File> f = files.get(strTableName);
 			Page tempPage = pages.get(strTableName).getLast();
@@ -364,6 +403,7 @@ public class DBApp {
 					}
 				}
 				if (!value.getClass().toString().substring(6).equals(tempCoup.getValue().toString())) {
+					System.out.println("From Database: Attempt to insert a record with incorrect type.");
 					return;
 				}
 				/*
@@ -396,7 +436,7 @@ public class DBApp {
 			rowData[rowData.length - 1] = new Couple();
 			rowData[rowData.length - 1].setKey("TouchDate");
 			rowData[rowData.length - 1].setValue(Instant.now());
-
+			System.out.println("From Database: Record inserted.");
 			Couple[] rowInfo = metaData.get(strTableName);
 			Object primaryKey = null;
 
@@ -434,53 +474,6 @@ public class DBApp {
 	public Iterator selectFromTable(String strTableName, String strColumnName, Object[] objarrValues,
 			String[] strarrOperators) {
 		return null;
-	}
-
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		DBApp app = new DBApp();
-		app.init();
-		String strTableName = "Students";
-		Hashtable htblColNameType = new Hashtable();
-		htblColNameType.put("id", "java.lang.Integer");
-		htblColNameType.put("name", "java.lang.String");
-		htblColNameType.put("gpa", "java.lang.Double");
-
-		app.createTable(strTableName, "id", htblColNameType);
-
-		Hashtable htblColNameValue = new Hashtable();
-		htblColNameValue.put("id", new Integer(8));
-		htblColNameValue.put("name", new String("Ahmed Noor"));
-		htblColNameValue.put("gpa", new Double(0.5));
-		app.insertIntoTable(strTableName, htblColNameValue);
-		FileInputStream fis = new FileInputStream("classes/Students.class");
-		ObjectInputStream ois = new ObjectInputStream(fis);
-		Page p = (Page) ois.readObject();
-		HashMap<Object, Couple[]> metaData = p.getPage();
-		ois.close();
-		if (metaData != null) {
-			System.out.println(metaData.toString());
-			// System.out.println(metaData[0].getValue());
-		}
-		Couple[] b = metaData.get(8);
-		System.out.println(b[0].getKey());
-		System.out.println(b[0].getValue());
-
-		// htblColNameValue.clear();
-		// htblColNameValue.put("id", new Integer(5674567));
-		// htblColNameValue.put("name", new String("Dalia Noor"));
-		// htblColNameValue.put("gpa", new Double(1.25));
-		// app.insertIntoTable(strTableName, htblColNameValue);
-		// htblColNameValue.clear();
-		// htblColNameValue.put("id", new Integer(23498));
-		// htblColNameValue.put("name", new String("John Noor"));
-		// htblColNameValue.put("gpa", new Double(1.5));
-		// app.insertIntoTable(strTableName, htblColNameValue);
-		// htblColNameValue.clear();
-		// htblColNameValue.put("id", new Integer(78452));
-		// htblColNameValue.put("name", new String("Zaky Noor"));
-		// htblColNameValue.put("gpa", new Double(0.88));
-		// app.insertIntoTable(strTableName, htblColNameValue);
-		// System.out.println(Instant.now().getClass());
 	}
 
 }

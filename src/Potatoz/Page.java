@@ -8,9 +8,6 @@ import java.util.HashMap;
 import java.util.Properties;
 
 public class Page implements Serializable {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	public HashMap<Object, Couple[]> page;
 	public int max;
@@ -23,7 +20,6 @@ public class Page implements Serializable {
 		Properties maxPage = new Properties();
 		maxPage.load(read);
 		max = Integer.parseInt(maxPage.getProperty("MaximumRowsCountinPage"));
-		//max = 1;
 	}
 
 	public void add(Object pKey, Couple[] row) {
