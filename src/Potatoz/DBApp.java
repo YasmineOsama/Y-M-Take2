@@ -261,7 +261,6 @@ public class DBApp {
 		FileInputStream fis = new FileInputStream("classes/" + strTableName + "files.class");
 		if (fis.available() > 0) {
 			ObjectInputStream ois = new ObjectInputStream(fis);
-			@SuppressWarnings("unchecked")
 			Hashtable<String, LinkedList<File>> tempFiles = (Hashtable<String, LinkedList<File>>) (ois.readObject());
 			ois.close();
 			return tempFiles;
@@ -279,7 +278,6 @@ public class DBApp {
 		FileInputStream fis = new FileInputStream("classes/" + strTableName + "pages.class");
 		if (fis.available() > 0) {
 			ObjectInputStream ois = new ObjectInputStream(fis);
-			@SuppressWarnings("unchecked")
 			Hashtable<String, LinkedList<Page>> tempPages = (Hashtable<String, LinkedList<Page>>) (ois.readObject());
 			ois.close();
 			return tempPages;
@@ -450,9 +448,9 @@ public class DBApp {
 		app.createTable(strTableName, "id", htblColNameType);
 
 		Hashtable htblColNameValue = new Hashtable();
-		htblColNameValue.put("id", new Integer(12345));
+		htblColNameValue.put("id", new Integer(8));
 		htblColNameValue.put("name", new String("Ahmed Noor"));
-		htblColNameValue.put("gpa", new Double(0.95));
+		htblColNameValue.put("gpa", new Double(0.5));
 		app.insertIntoTable(strTableName, htblColNameValue);
 		FileInputStream fis = new FileInputStream("classes/Students.class");
 		ObjectInputStream ois = new ObjectInputStream(fis);
@@ -463,7 +461,7 @@ public class DBApp {
 			System.out.println(metaData.toString());
 			// System.out.println(metaData[0].getValue());
 		}
-		Couple[] b = metaData.get(12345);
+		Couple[] b = metaData.get(8);
 		System.out.println(b[0].getKey());
 		System.out.println(b[0].getValue());
 
