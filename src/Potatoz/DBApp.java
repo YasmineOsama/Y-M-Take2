@@ -3,6 +3,7 @@ package Potatoz;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -465,10 +466,114 @@ public class DBApp {
 
 	}
 
-	public void updateTable(String strTableName, String strKey, Hashtable<String, Object> htblColNameValue) {
+	public void updateTable(String strTableName, String strKey, Hashtable<String, Object> htblColNameValue)
+			throws ClassNotFoundException, IOException {
+		boolean la2eto = false;
+		HashMap<String, Couple[]> metaData = readMetaData();
+		if (!tableExists(strTableName)) {
+			System.out.println("From Database: Table doesn't exist");
+		} else {
+
+			/*
+			 * Following if() will be executed if the page contains records.
+			 */
+			int index = 0;
+			files = readPageFiles(strTableName);
+			LinkedList<File> tableFiles = files.get(strTableName);
+			for (int i = 0; i < tableFiles.size(); i++) {
+				File tableFile = tableFiles.get(i);
+				FileInputStream fis = new FileInputStream(tableFile);
+
+				if (fis.available() > 0) {
+					ObjectInputStream ois = new ObjectInputStream(fis);
+					Page readPage = (Page) (ois.readObject());
+					ois.close();
+					HashMap<Object, Couple[]> table = readPage.getPage();
+					Object[] arrayString = table.keySet().toArray();
+					for (int j = 0; j < arrayString.length; j++) {
+						la2eto = (arrayString[j] + "").equals(strKey + "");
+						if (la2eto) {
+							index = j;
+							break;
+						}
+					}
+					Couple[] get = null;
+					Couple[] remove = null;
+					System.out.println((table.keySet().toArray()[0] + "").equals(strKey));
+					if (la2eto) {
+						get = table.get(arrayString[index]);
+						remove = table.remove(arrayString[index]);
+						insertIntoTable(strTableName, htblColNameValue);
+						System.out.println("Table updated");
+						return;
+					}
+				}
+			}
+			System.out.println("Record not found.");
+		}
 	}
 
-	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue) {
+	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
+			throws ClassNotFoundException, IOException {
+		boolean la2eto = false;
+		Object[] keys = htblColNameValue.keySet().toArray();
+		Couple[] rowData = new Couple[keys.length];
+		for (int i = 0; i < keys.length; i++) {
+			Object value = htblColNameValue.get(keys[i]);
+			rowData[i] = new Couple();
+			rowData[i].setKey((String) keys[i]);
+			rowData[i].setValue(value);
+		}
+		HashMap<String, Couple[]> metaData = readMetaData();
+		if (!tableExists(strTableName)) {
+			System.out.println("From Database: Table doesn't exist");
+		} else {
+
+			/*
+			 * Following if() will be executed if the page contains records.
+			 */
+			int index = 0;
+			files = readPageFiles(strTableName);
+			LinkedList<File> tableFiles = files.get(strTableName);
+			for (int i = 0; i < tableFiles.size(); i++) {
+				File tableFile = tableFiles.get(i);
+				FileInputStream fis = new FileInputStream(tableFile);
+
+				if (fis.available() > 0) {
+					ObjectInputStream ois = new ObjectInputStream(fis);
+					Page readPage = (Page) (ois.readObject());
+					ois.close();
+					HashMap<Object, Couple[]> table = readPage.getPage();
+					Collection<Couple[]> arrayString = table.values();
+					for (Couple[] couples : arrayString) {
+						if (recordFound(couples, rowData)) {
+							la2eto = true;
+							System.out.println(table.containsValue(rowData));
+							Couple[] remove = table.remove(couples);
+							rowData = couples;
+							break;
+						}
+					}
+					return;
+				}
+				// System.out.println((table.keySet().toArray()[0] +
+				// "").equals(strKey));
+				// if (la2eto) {
+				// get = table.get(arrayString[index]);
+				// remove = table.remove(arrayString[index]);
+				// return;
+				// }
+			}
+		}
+		System.out.println("Record not found.");
+	}
+
+	public boolean recordFound(Couple[] co, Couple[] ca) {
+		for (int i = 0; i < ca.length; i++) {
+			if (!(co[i].getValue().equals(ca[i].getValue()) && co[i].getKey().equals(ca[i].getKey())))
+				return false;
+		}
+		return true;
 	}
 
 	public Iterator selectFromTable(String strTableName, String strColumnName, Object[] objarrValues,
