@@ -468,11 +468,23 @@ public class DBApp {
 
 	}
 
+	/***
+	 * On an existing record update.
+	 * 
+	 * @param strTableName:
+	 *            Table name to be used for the update.
+	 * @param strKey:
+	 *            Key used to identify records to be updated.
+	 * @param htblColNameValue:
+	 *            Record after modification.
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
 	public void updateTable(String strTableName, String strKey, Hashtable<String, Object> htblColNameValue)
 			throws ClassNotFoundException, IOException {
 		boolean found = false;
 		if (!tableExists(strTableName)) {
-			System.out.println("From Database: Table doesn't exist");
+			System.out.println("From Database: Table doesn't exist.");
 		} else {
 
 			/*
@@ -491,6 +503,10 @@ public class DBApp {
 					ois.close();
 					HashMap<Object, Couple[]> table = readPage.getPage();
 					Object[] arrayString = table.keySet().toArray();
+					/*
+					 * For loop to get the index of the data with the
+					 * corresponding strKey.
+					 */
 					for (int j = 0; j < arrayString.length; j++) {
 						found = (arrayString[j] + "").equals(strKey + "");
 						if (found) {
@@ -498,13 +514,20 @@ public class DBApp {
 							break;
 						}
 					}
+
+					/*
+					 * Found is a boolean for the updating procedure for the
+					 * index.
+					 */
 					if (found) {
 						Couple[] get = table.get(arrayString[index]);
 						Hashtable<String, Object> updatedRow = newRow(get, htblColNameValue);
 						table.remove(arrayString[index]);
-						ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
+						ObjectOutputStream oos = new ObjectOutputStream(
+								new FileOutputStream(files.get(strTableName).getLast()));
 						readPage.setPage(table);
-						oos.writeObject(readPage); // Record saved in the .class file.
+						oos.writeObject(readPage); // Record saved in the .class
+													// file.
 						oos.close();
 						insertIntoTable(strTableName, updatedRow);
 						System.out.println("Table updated");
@@ -516,6 +539,15 @@ public class DBApp {
 		}
 	}
 
+	/***
+	 * Method responsible for updating the record.
+	 * 
+	 * @param oldRow:
+	 *            Existing record passed to the method.
+	 * @param updates:
+	 *            Hashtable containing wanted modifications.
+	 * @return
+	 */
 	public Hashtable<String, Object> newRow(Couple[] oldRow, Hashtable<String, Object> updates) {
 		Object[] keys = updates.keySet().toArray();
 		Couple[] rowData = new Couple[keys.length];
@@ -529,12 +561,12 @@ public class DBApp {
 		for (int i = 0; i < oldRow.length; i++) {
 			boolean found = false;
 			for (int j = 0; j < rowData.length; j++) {
-				if (oldRow[i].getKey().equals(rowData[j].getKey())){
+				if (oldRow[i].getKey().equals(rowData[j].getKey())) {
 					updatedRow.put(oldRow[i].getKey(), rowData[j].getValue());
 					found = true;
 					break;
 				}
-				if(!found && !((oldRow[i].getKey() + "").equals("TouchDate"))) {
+				if (!found && !((oldRow[i].getKey() + "").equals("TouchDate"))) {
 					updatedRow.put(oldRow[i].getKey(), oldRow[i].getValue());
 				}
 			}
@@ -542,11 +574,25 @@ public class DBApp {
 		return updatedRow;
 	}
 
+	/***
+	 * On an existing record deletion.
+	 * 
+	 * @param strTableName:
+	 *            Table used for deletion process.
+	 * @param htblColNameValue:
+	 *            Record to be deleted passed to the method as a Hashtable.
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> htblColNameValue)
 			throws ClassNotFoundException, IOException {
 		int recordsDeleted = 0;
 		Object[] keys = htblColNameValue.keySet().toArray();
 		Couple[] rowData = new Couple[keys.length];
+		/*
+		 * Following for loop for creating a Couple[] from the given
+		 * htblColNameValue.
+		 */
 		for (int i = 0; i < keys.length; i++) {
 			Object value = htblColNameValue.get(keys[i]);
 			rowData[i] = new Couple();
@@ -554,7 +600,7 @@ public class DBApp {
 			rowData[i].setValue(value);
 		}
 		if (!tableExists(strTableName)) {
-			System.out.println("From Database: Table doesn't exist");
+			System.out.println("From Database: Table doesn't exist.");
 		} else {
 
 			/*
@@ -562,6 +608,10 @@ public class DBApp {
 			 */
 			files = readPageFiles(strTableName);
 			LinkedList<File> tableFiles = files.get(strTableName);
+			/*
+			 * For loop iterating over all written files on the disk to find the
+			 * record and handling the deletion process.
+			 */
 			for (int i = 0; i < tableFiles.size(); i++) {
 				File tableFile = tableFiles.get(i);
 				FileInputStream fis = new FileInputStream(tableFile);
@@ -573,12 +623,14 @@ public class DBApp {
 					HashMap<Object, Couple[]> table = readPage.getPage();
 					Object[] arrayString = table.values().toArray();
 					for (int j = 0; j < arrayString.length; j++) {
-						if (recordFound((Couple[])arrayString[j], rowData)) {
+						if (recordFound((Couple[]) arrayString[j], rowData)) {
 							Object primaryKey = findPrimaryKey((Couple[]) arrayString[j], strTableName);
 							table.remove(primaryKey);
-							ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
+							ObjectOutputStream oos = new ObjectOutputStream(
+									new FileOutputStream(files.get(strTableName).getLast()));
 							readPage.setPage(table);
-							oos.writeObject(readPage); // Record saved in the .class file.
+							oos.writeObject(readPage); // Record saved in the
+														// .class file.
 							oos.close();
 							recordsDeleted++;
 						}
@@ -605,11 +657,12 @@ public class DBApp {
 	public boolean recordFound(Couple[] arrayString, Couple[] rowData) {
 		int found = 0;
 		for (int i = 0; i < rowData.length; i++) {
-			for(int j = 0; j < arrayString.length; j++) {
-				if (((arrayString[j]).getValue()).equals(rowData[i].getValue()) && ((arrayString[j]).getKey()).equals(rowData[i].getKey()))
+			for (int j = 0; j < arrayString.length; j++) {
+				if (((arrayString[j]).getValue()).equals(rowData[i].getValue())
+						&& ((arrayString[j]).getKey()).equals(rowData[i].getKey()))
 					found++;
 			}
-			if(found == rowData.length) {
+			if (found == rowData.length) {
 				return true;
 			}
 		}
