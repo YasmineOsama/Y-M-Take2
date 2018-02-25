@@ -622,25 +622,39 @@ public class DBApp {
 					ois.close();
 					HashMap<Object, Couple[]> table = readPage.getPage();
 					Object[] arrayString = table.values().toArray();
+					/*
+					 * For loop removing the record once it is found.
+					 */
 					for (int j = 0; j < arrayString.length; j++) {
 						if (recordFound((Couple[]) arrayString[j], rowData)) {
 							Object primaryKey = findPrimaryKey((Couple[]) arrayString[j], strTableName);
 							table.remove(primaryKey);
-							ObjectOutputStream oos = new ObjectOutputStream(
-									new FileOutputStream(files.get(strTableName).getLast()));
-							readPage.setPage(table);
-							oos.writeObject(readPage); // Record saved in the
-														// .class file.
-							oos.close();
 							recordsDeleted++;
 						}
 					}
+					/*
+					 * Object re-written on the disk after the deletion.
+					 */
+					readPage.setPage(table);
+					ObjectOutputStream oos = new ObjectOutputStream(
+							new FileOutputStream(files.get(strTableName).getLast()));
+					oos.writeObject(readPage); // Record saved in the .class
+												// file.
+					oos.close();
 				}
 			}
 		}
 		System.out.println(recordsDeleted + " records deleted.");
 	}
 
+	/***
+	 * Method used for finding the primary key.. (Obviously)
+	 * 
+	 * @param rowData:
+	 *            Record from a certain table.
+	 * @param strTableName:
+	 *            Table name used for finding the primary key for this table.
+	 */
 	private Object findPrimaryKey(Couple[] rowData, String strTableName) throws ClassNotFoundException, IOException {
 		HashMap<String, Couple[]> metaData = readMetaData();
 		Couple[] rowInfo = metaData.get(strTableName);
@@ -654,6 +668,15 @@ public class DBApp {
 		return primaryKey;
 	}
 
+	/***
+	 * Method used for signaling with a boolean for two identical records.
+	 * 
+	 * @param arrayString:
+	 *            Record from the original table.
+	 * @param rowData:
+	 *            Record as an input from the user.
+	 * @return
+	 */
 	public boolean recordFound(Couple[] arrayString, Couple[] rowData) {
 		int found = 0;
 		for (int i = 0; i < rowData.length; i++) {
