@@ -530,7 +530,7 @@ public class DBApp {
 													// file.
 						oos.close();
 						insertIntoTable(strTableName, updatedRow);
-						System.out.println("Table updated");
+						System.out.println("From Database: Table updated.");
 						return;
 					}
 				}
@@ -644,11 +644,11 @@ public class DBApp {
 				}
 			}
 		}
-		System.out.println(recordsDeleted + " records deleted.");
+		System.out.println("From Database: " + recordsDeleted + " records deleted.");
 	}
 
 	/***
-	 * Method used for finding the primary key.. (Obviously)
+	 * Method used for finding the primary key.
 	 * 
 	 * @param rowData:
 	 *            Record from a certain table.

@@ -117,14 +117,17 @@ public class DBAppTest {
 		System.out.println(b[2].getValue());
 		System.out.print(b[3].getKey() + ": ");
 		System.out.println(b[3].getValue());
+		System.out.println("- Trying to update a record with the id of 5674567 with the following values.");
 		htblColNameValue.clear();
 		htblColNameValue.put("name", new String("yasoo"));
 		htblColNameValue.put("gpa", new Double(1.25));
 		app.updateTable(strTableName, "5674567", htblColNameValue);
+		System.out.println("- Trying to delete records with two parameters.");
 		htblColNameValue.clear();
 		htblColNameValue.put("name", new String("yasoo"));
 		htblColNameValue.put("gpa", new Double(0.25));
 		app.deleteFromTable(strTableName, htblColNameValue);
+		System.out.println("- Trying to delete records with one parameter.");
 		htblColNameValue.clear();
 		htblColNameValue.put("name", new String("yasoo"));
 		app.deleteFromTable(strTableName, htblColNameValue);
