@@ -110,5 +110,11 @@ public class DBAppTest {
 		System.out.println(b[2].getValue());
 		System.out.print(b[3].getKey() + ": ");
 		System.out.println(b[3].getValue());
+		htblColNameValue.clear();
+		htblColNameValue.put("id", new Integer(1234));
+		htblColNameValue.put("name", new String("Eihba2a"));
+		htblColNameValue.put("gpa", new Double(1.25));
+		app.updateTable(strTableName, "5674567", htblColNameValue);
+		app.deleteFromTable(strTableName, htblColNameValue);
 	}
 }
