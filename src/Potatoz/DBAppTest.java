@@ -95,6 +95,13 @@ public class DBAppTest {
 		htblColNameValue.put("name", new String("Teacher Teacher ya3ni"));
 		htblColNameValue.put("gpa", new Double(1.25));
 		app.insertIntoTable(strTableName, htblColNameValue);
+		htblColNameValue.clear();
+		System.out.println("- Trying to insert a record with id 1234.");
+		htblColNameValue.put("id", new Integer(1234));
+		htblColNameValue.put("name", new String("yasoo"));
+		htblColNameValue.put("gpa", new Double(1.25));
+		app.insertIntoTable(strTableName, htblColNameValue);
+
 		fis = new FileInputStream("classes/Teachers.class");
 		ois = new ObjectInputStream(fis);
 		p = (Page) ois.readObject();

@@ -576,13 +576,13 @@ public class DBApp {
 						if (recordFound((Couple[])arrayString[j], rowData)) {
 							Object primaryKey = findPrimaryKey((Couple[]) arrayString[j], strTableName);
 							table.remove(primaryKey);
-							ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
-							readPage.setPage(table);
-							oos.writeObject(readPage); // Record saved in the .class file.
-							oos.close();
 							recordsDeleted++;
 						}
 					}
+					readPage.setPage(table);
+					ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
+					oos.writeObject(readPage); // Record saved in the .class file.
+					oos.close();
 				}
 			}
 		}
