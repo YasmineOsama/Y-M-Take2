@@ -14,13 +14,13 @@ public class DBAppTest {
 				"**This test will show incorrect results if tried more than once or if classes/ directory and data/ directory are not empty**");
 		String strTableName = "Students";
 		System.out.println("- Trying to create a table 'Students'.");
-		Hashtable htblColNameType = new Hashtable();
+		Hashtable<String, String> htblColNameType = new Hashtable<String, String>();
 		htblColNameType.put("id", "java.lang.Integer");
 		htblColNameType.put("name", "java.lang.String");
 		htblColNameType.put("gpa", "java.lang.Double");
 		app.createTable(strTableName, "id", htblColNameType);
 		System.out.println("- Trying to insert a record with id 8.");
-		Hashtable htblColNameValue = new Hashtable();
+		Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 		htblColNameValue.put("id", new Integer(8));
 		htblColNameValue.put("name", new String("Ahmed Noor"));
 		htblColNameValue.put("gpa", new Double(0.5));
@@ -78,7 +78,7 @@ public class DBAppTest {
 		System.out.println(b[3].getValue());
 		strTableName = "Teachers";
 		System.out.println("- Trying to create a table 'Teachers'.");
-		htblColNameType = new Hashtable();
+		htblColNameType.clear();
 		htblColNameType.put("id", "java.lang.Integer");
 		htblColNameType.put("name", "java.lang.String");
 		htblColNameType.put("gpa", "java.lang.Double");
@@ -111,10 +111,15 @@ public class DBAppTest {
 		System.out.print(b[3].getKey() + ": ");
 		System.out.println(b[3].getValue());
 		htblColNameValue.clear();
-		htblColNameValue.put("id", new Integer(1234));
-		htblColNameValue.put("name", new String("Eihba2a"));
+		htblColNameValue.put("name", new String("yasoo"));
 		htblColNameValue.put("gpa", new Double(1.25));
 		app.updateTable(strTableName, "5674567", htblColNameValue);
+		htblColNameValue.clear();
+		htblColNameValue.put("name", new String("yasoo"));
+		htblColNameValue.put("gpa", new Double(0.25));
+		app.deleteFromTable(strTableName, htblColNameValue);
+		htblColNameValue.clear();
+		htblColNameValue.put("name", new String("yasoo"));
 		app.deleteFromTable(strTableName, htblColNameValue);
 	}
 }
