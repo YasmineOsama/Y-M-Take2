@@ -15,6 +15,7 @@ public class DBApp {
 	static StringBuilder sb;
 	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
+	static LinkedList<IndexCouple> indexing;
 
 	/**
 	 * Reading existing metadata previously written on disk for further table
@@ -250,7 +251,16 @@ public class DBApp {
 
 	}
 
+	/***
+	 * Method called after every insert.
+	 * 
+	 * @param strTableName:
+	 *            Table name for which a BRINIndex will be created.
+	 * @param strColName:
+	 *            Column name on which a BRINIndex will be created.
+	 */
 	public void createBRINIndex(String strTableName, String strColName) {
+
 	}
 
 	/**
@@ -353,7 +363,7 @@ public class DBApp {
 			if (fis.available() > 0) {
 				ObjectInputStream ois = new ObjectInputStream(fis);
 				Page readPage = (Page) (ois.readObject());
-				HashMap<Object, Couple[]> table = readPage.getPage();
+				LinkedHashMap<Object, Couple[]> table = readPage.getPage();
 				ois.close();
 				Object[] pkeys = table.keySet().toArray();
 				/*
@@ -501,7 +511,7 @@ public class DBApp {
 					ObjectInputStream ois = new ObjectInputStream(fis);
 					Page readPage = (Page) (ois.readObject());
 					ois.close();
-					HashMap<Object, Couple[]> table = readPage.getPage();
+					LinkedHashMap<Object, Couple[]> table = readPage.getPage();
 					Object[] arrayString = table.keySet().toArray();
 					/*
 					 * For loop to get the index of the data with the
@@ -620,7 +630,7 @@ public class DBApp {
 					ObjectInputStream ois = new ObjectInputStream(fis);
 					Page readPage = (Page) (ois.readObject());
 					ois.close();
-					HashMap<Object, Couple[]> table = readPage.getPage();
+					LinkedHashMap<Object, Couple[]> table = readPage.getPage();
 					Object[] arrayString = table.values().toArray();
 					/*
 					 * For loop removing the record once it is found.
