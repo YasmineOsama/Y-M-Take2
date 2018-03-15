@@ -258,9 +258,44 @@ public class DBApp {
 	 *            Table name for which a BRINIndex will be created.
 	 * @param strColName:
 	 *            Column name on which a BRINIndex will be created.
+	 * @throws IOException
+	 * @throws ClassNotFoundException
 	 */
-	public void createBRINIndex(String strTableName, String strColName) {
+	public void createBRINIndex(String strTableName, String strColName) throws ClassNotFoundException, IOException {
+		/*
+		 * metaData is the previously stored information about all the created
+		 * tables.
+		 */
+		HashMap<String, Couple[]> metaData = readMetaData();
+		/*
+		 * Table's keys and types retrieved for insertion checks.
+		 */
+		Object type = null;
+		Couple[] tableData = metaData.get(strTableName);
+		if (tableData != null)
+			for (Couple couple : tableData) {
+				if (strColName.equals(couple.getKey()))
+					type = couple.getValue();
+			}
 
+		if (type != null) {
+			/*
+			 * Retrieving previously stored Hashtables for tables' files and
+			 * pages and re-assigning class's instance variables with them.
+			 */
+			Hashtable<String, LinkedList<File>> tempFiles = readPageFiles(strTableName);
+			if (tempFiles != null) {
+				files = tempFiles;
+			}
+			Hashtable<String, LinkedList<Page>> tempPages = readPagePages(strTableName);
+			if (tempPages != null) {
+				pages = tempPages;
+			}
+			ObjectOutputStream oos1 = new ObjectOutputStream(
+					new FileOutputStream("classes/" + strTableName + "index.class"));
+			oos1.writeObject(files); // Recording table's associated files info
+			oos1.close();
+		}
 	}
 
 	/**
