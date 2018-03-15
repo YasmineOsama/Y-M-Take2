@@ -32,6 +32,12 @@ public class DBAppTest {
 		htblColNameValue.put("gpa", new Double(1.25));
 		app.insertIntoTable(strTableName, htblColNameValue);
 		htblColNameValue.clear();
+		System.out.println("- Trying to insert a record with id 9.");
+		htblColNameValue.put("id", new Integer(9));
+		htblColNameValue.put("name", new String("Hany Mohamed"));
+		htblColNameValue.put("gpa", new Double(1.0));
+		app.insertIntoTable(strTableName, htblColNameValue);
+		htblColNameValue.clear();
 		System.out.println("- Trying to insert a duplicate record.");
 		htblColNameValue.put("id", new Integer(5674567));
 		htblColNameValue.put("name", new String("Dalia Noor"));

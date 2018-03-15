@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -28,22 +29,23 @@ public class Page implements Serializable, Comparator<Map.Entry<String, Integer>
 		maxPage.load(read);
 		max = Integer.parseInt(maxPage.getProperty("MaximumRowsCountinPage"));
 	}
-
+	public LinkedHashMap<Object, Couple[]> sortMapByKeys() {	 
+	    List<Map.Entry<Object, Couple[]>> entries 
+	      = new ArrayList<>(page.entrySet());
+	    Collections.sort(entries, new Comparator<Entry<Object, Couple[]>>() {
+			public int compare(Entry<Object, Couple[]> arg0, Entry<Object, Couple[]> arg1) {
+				return ((Integer) arg0.getKey()).compareTo((Integer) arg1.getKey());
+			}
+	    });
+	    LinkedHashMap<Object, Couple[]> sortedMap = new LinkedHashMap<>();
+	    for (Map.Entry<Object, Couple[]> entry : entries) {
+	        sortedMap.put(entry.getKey(), entry.getValue());
+	    }
+	    return sortedMap;
+	}
 	public void add(Object pKey, Couple[] row) {
 		page.put(pKey, row);
-		// Collections.sor
-//		Set<Entry<Object, Couple[]>> x = page.entrySet();
-//		LinkedHashMap<Object, Couple[]> y = new LinkedHashMap<Object, Couple[]>();
-//		Collections.sort((List<>) x, new Comparator() {
-//			public int compare(Object o1, Object o2) {
-//				if ((Integer) o1 < (Integer) o2)
-//					return 1;
-//				if ((Integer) o1 > (Integer) o2)
-//					return -1;
-//				return 0;
-//			}
-//		});
-
+		setPage(sortMapByKeys());
 	}
 
 	public LinkedHashMap<Object, Couple[]> getPage() {
