@@ -3,6 +3,7 @@ package Potatoz;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,7 +16,8 @@ public class DBApp {
 	static StringBuilder sb;
 	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
-	static LinkedList<IndexCouple> indexing;
+	static Hashtable<String, LinkedList<IndexCouple>> indices;
+	LinkedList<Couple[]> unlocatedData;
 
 	/**
 	 * Reading existing metadata previously written on disk for further table
@@ -55,7 +57,7 @@ public class DBApp {
 		 * initialization.
 		 */
 		Properties prop = new Properties();
-		prop.setProperty("MaximumRowsCountinPage", "200");
+		prop.setProperty("MaximumRowsCountinPage", "2");
 		prop.setProperty("BRINSize", "15");
 		prop.store(new FileOutputStream("config/DBApp.config"),
 				"MaximumRowsCountinPage as the name indicates specifies the maximum number of rows in a page."
@@ -76,6 +78,7 @@ public class DBApp {
 		 */
 		files = new Hashtable<String, LinkedList<File>>();
 		pages = new Hashtable<String, LinkedList<Page>>();
+		indices = new Hashtable<String, LinkedList<IndexCouple>>();
 		/*
 		 * Hashtables keeping track for every file and page created for all
 		 * tables.
@@ -109,6 +112,7 @@ public class DBApp {
 		} else {
 			new File("classes/" + strTableName + "files.class").createNewFile();
 			new File("classes/" + strTableName + "pages.class").createNewFile();
+			new File("classes/" + strTableName + "indices.class").createNewFile();
 
 			LinkedList<File> tempfileList = new LinkedList<File>();
 			/*
@@ -118,6 +122,7 @@ public class DBApp {
 			/*
 			 * LinkedList keeping track for all pages created for this table.
 			 */
+			LinkedList<IndexCouple> tempindexList = new LinkedList<IndexCouple>();
 			Couple[] row = new Couple[htblColNameType.size() + 2];
 			/*
 			 * Adding columns data/restrictions.
@@ -166,7 +171,8 @@ public class DBApp {
 			Page tempPage = new Page();
 			temppageList.add(tempPage); // Page added in the list of pages for
 			// the table.
-
+			IndexCouple index = new IndexCouple(0, null);
+			tempindexList.add(index);
 			/*
 			 * Instance variables for the DataBase updated with the trackers for
 			 * files <LinkedList> and pages <LinkedList> concerning this
@@ -175,7 +181,7 @@ public class DBApp {
 			 */
 			files.put(strTableName, tempfileList);
 			pages.put(strTableName, temppageList);
-
+			indices.put(strTableName, tempindexList);
 			// HashMap<String, LinkedList<Object>> tempunikey = new
 			// HashMap<String, LinkedList<Object>>();
 			// tempunikey.put(strClusteringKeyColumn, new LinkedList<Object>());
@@ -219,6 +225,10 @@ public class DBApp {
 					new FileOutputStream("classes/" + strTableName + "pages.class"));
 			oos11.writeObject(pages); // recording all pages of this table
 			oos11.close();
+			ObjectOutputStream oos111 = new ObjectOutputStream(
+					new FileOutputStream("classes/" + strTableName + "indices.class"));
+			oos111.writeObject(indices); // recording all pages of this table
+			oos111.close();
 			System.out.println("From Database: Table " + strTableName + " created and stored in the database.");
 		}
 
@@ -277,7 +287,9 @@ public class DBApp {
 				if (strColName.equals(couple.getKey()))
 					type = couple.getValue();
 			}
+		if (strColName.equals(findPrimaryColumn(tableData, strTableName))) {
 
+		}
 		if (type != null) {
 			/*
 			 * Retrieving previously stored Hashtables for tables' files and
@@ -293,7 +305,8 @@ public class DBApp {
 			}
 			ObjectOutputStream oos1 = new ObjectOutputStream(
 					new FileOutputStream("classes/" + strTableName + "index.class"));
-			oos1.writeObject(files); // Recording table's associated files info
+			oos1.writeObject(files); // Recording table's associated files
+										// info
 			oos1.close();
 		}
 	}
@@ -373,6 +386,147 @@ public class DBApp {
 	}
 
 	/**
+	 * Method for getting all indices contributing in all the tables' data, null
+	 * if there's none.
+	 * 
+	 * @param strTableName:
+	 *            Table name received by the method which has access to the disk
+	 *            and return the stored written-on pages for this table.
+	 */
+	public Hashtable<String, LinkedList<IndexCouple>> readPageIndices(String strTableName)
+			throws IOException, ClassNotFoundException {
+		FileInputStream fis = new FileInputStream("classes/" + strTableName + "indices.class");
+		if (fis.available() > 0) {
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			@SuppressWarnings("unchecked")
+			Hashtable<String, LinkedList<IndexCouple>> tempIndices = (Hashtable<String, LinkedList<IndexCouple>>) (ois
+					.readObject());
+			ois.close();
+			return tempIndices;
+		}
+		fis.close();
+		return null;
+	}
+
+	public void insertNext(String strTableName, HashMap<String, Couple[]> metaData, Couple[] rowData, int counter,
+			LinkedList<Page> p, LinkedList<File> f, LinkedList<IndexCouple> ind, Object number)
+			throws FileNotFoundException, IOException {
+		for (; counter < p.size(); counter++) {
+			Page tempPage = p.get(counter);
+			File tempFile = f.get(counter);
+			IndexCouple tempIndex = ind.get(counter);
+			if (tempIndex.inRange((Integer) number, counter)) {
+				// && tempPage.full() > 0
+				/*
+				 * Additional column added for the exact time when the record
+				 * was inserted in the database.
+				 */
+				tempIndex.setFirst((Integer) number);
+				// if (tempPage.full() <= 1)
+				// tempIndex.setLast((Integer) number);
+				System.out.println("From Database: Record inserted.");
+				Couple[] rowInfo = metaData.get(strTableName);
+				Object primaryKey = null;
+
+				for (int i = 0; i < rowData.length; i++) { // getting
+															// primary
+															// key
+					// value
+					if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
+						primaryKey = rowData[i].getValue();
+						break;
+					}
+				}
+				// pages.put(strTableName, p);
+				// files.put(strTableName, f);
+				Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
+																		// added
+																		// to
+																		// the
+																		// page.
+				if (tobeAdded != null)
+					insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
+				ObjectOutputStream oos = new ObjectOutputStream(
+						new FileOutputStream(files.get(strTableName).getLast()));
+				oos.writeObject(tempPage); // Record saved in the .class
+											// file.
+				oos.close();
+				ObjectOutputStream oos1 = new ObjectOutputStream(
+						new FileOutputStream("classes/" + strTableName + "files.class"));
+				oos1.writeObject(files); // Recording table's associated
+											// files
+											// info
+				oos1.close();
+				ObjectOutputStream oos11 = new ObjectOutputStream(
+						new FileOutputStream("classes/" + strTableName + "pages.class"));
+				oos11.writeObject(pages); // recording all pages of this
+											// table
+				oos11.close();
+				ObjectOutputStream oos111 = new ObjectOutputStream(
+						new FileOutputStream("classes/" + strTableName + "indices.class"));
+				oos111.writeObject(indices); // recording all pages of this
+												// table
+				oos111.close();
+				return;
+			}
+		}
+		/*
+		 * New Page created and added at the end of the LinkedList concerning
+		 * the table.
+		 */
+		Page tempPage = new Page();
+		File tempFile = new File("classes/" + strTableName + f.size() + ".class");
+		IndexCouple tempIndex = new IndexCouple(0, null);
+		p.add(tempPage);
+		/*
+		 * New file added at the end of the LinkedList concerning the table.
+		 */
+		tempFile = new File("classes/" + strTableName + f.size() + ".class");
+		f.add(tempFile);
+		ind.add(tempIndex);
+		rowData[rowData.length - 1] = new Couple();
+		rowData[rowData.length - 1].setKey("TouchDate");
+		rowData[rowData.length - 1].setValue(Instant.now());
+		System.out.println("From Database: Record inserted.");
+		Couple[] rowInfo = metaData.get(strTableName);
+		Object primaryKey = null;
+
+		for (int i = 0; i < rowData.length; i++) { // getting
+													// primary
+													// key
+			// value
+			if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
+				primaryKey = rowData[i].getValue();
+				break;
+			}
+		}
+		// pages.put(strTableName, p);
+		// files.put(strTableName, f);
+		Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
+																// added
+																// to
+																// the
+																// page.
+		if (tobeAdded != null)
+			unlocatedData.add(tobeAdded);
+		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
+		oos.writeObject(tempPage); // Record saved in the .class
+									// file.
+		oos.close();
+		ObjectOutputStream oos1 = new ObjectOutputStream(
+				new FileOutputStream("classes/" + strTableName + "files.class"));
+		oos1.writeObject(files); // Recording table's associated
+									// files
+									// info
+		oos1.close();
+		ObjectOutputStream oos11 = new ObjectOutputStream(
+				new FileOutputStream("classes/" + strTableName + "pages.class"));
+		oos11.writeObject(pages); // recording all pages of this
+									// table
+		oos11.close();
+	}
+
+	/**
 	 * On new record insertion.
 	 * 
 	 * @param strTableName:
@@ -423,6 +577,10 @@ public class DBApp {
 			if (tempPages != null) {
 				pages = tempPages;
 			}
+			Hashtable<String, LinkedList<IndexCouple>> tempIndices = readPageIndices(strTableName);
+			if (tempIndices != null) {
+				indices = tempIndices;
+			}
 			/*
 			 * Table's keys and types retrieved for insertion checks.
 			 */
@@ -431,10 +589,7 @@ public class DBApp {
 			 * Array of couples to be passed and written on the disk.
 			 */
 			Couple[] rowData = new Couple[tableData.length - 1];
-			LinkedList<Page> p = pages.get(strTableName);
-			LinkedList<File> f = files.get(strTableName);
-			Page tempPage = pages.get(strTableName).getLast();
-			File tempFile = files.get(strTableName).getLast();
+
 			Object[] keys = htblColNameValue.keySet().toArray();
 			Object value;
 			/*
@@ -463,24 +618,89 @@ public class DBApp {
 				rowData[i].setKey((String) keys[i]);
 				rowData[i].setValue(value);
 			}
-			if (tempPage.full()) {
-				/*
-				 * New Page created and added at the end of the LinkedList
-				 * concerning the table.
-				 */
-				tempPage = new Page();
-				p.add(tempPage);
-				/*
-				 * New file added at the end of the LinkedList concerning the
-				 * table.
-				 */
-				tempFile = new File("classes/" + strTableName + f.size() + ".class");
-				f.add(tempFile);
+			LinkedList<Page> p = pages.get(strTableName);
+			LinkedList<File> f = files.get(strTableName);
+			LinkedList<IndexCouple> ind = indices.get(strTableName);
+			Object number = findPrimaryKey(rowData, strTableName);
+			for (int counter = 0; counter < p.size(); counter++) {
+				Page tempPage = p.get(counter);
+				File tempFile = f.get(counter);
+				IndexCouple tempIndex = ind.get(counter);
+				if (tempIndex.inRange((Integer) number, counter)) {
+					// && tempPage.full() > 0
+					/*
+					 * Additional column added for the exact time when the
+					 * record was inserted in the database.
+					 */
+					if (tempPage.full() == tempPage.max)
+						tempIndex.setFirst((Integer) number);
+					if (tempPage.full() <= 1)
+						tempIndex.setLast((Integer) number);
+					rowData[rowData.length - 1] = new Couple();
+					rowData[rowData.length - 1].setKey("TouchDate");
+					rowData[rowData.length - 1].setValue(Instant.now());
+					System.out.println("From Database: Record inserted.");
+					Couple[] rowInfo = metaData.get(strTableName);
+					Object primaryKey = null;
+
+					for (int i = 0; i < rowData.length; i++) { // getting
+																// primary
+																// key
+						// value
+						if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
+							primaryKey = rowData[i].getValue();
+							break;
+						}
+					}
+					// pages.put(strTableName, p);
+					// files.put(strTableName, f);
+					Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
+																			// added
+																			// to
+																			// the
+																			// page.
+					if (tobeAdded != null)
+						// unlocatedData.add(tobeAdded);
+						insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
+
+					ObjectOutputStream oos = new ObjectOutputStream(
+							new FileOutputStream(files.get(strTableName).getLast()));
+					oos.writeObject(tempPage); // Record saved in the .class
+												// file.
+					oos.close();
+					ObjectOutputStream oos1 = new ObjectOutputStream(
+							new FileOutputStream("classes/" + strTableName + "files.class"));
+					oos1.writeObject(files); // Recording table's associated
+												// files
+												// info
+					oos1.close();
+					ObjectOutputStream oos11 = new ObjectOutputStream(
+							new FileOutputStream("classes/" + strTableName + "pages.class"));
+					oos11.writeObject(pages); // recording all pages of this
+												// table
+					oos11.close();
+					ObjectOutputStream oos111 = new ObjectOutputStream(
+							new FileOutputStream("classes/" + strTableName + "indices.class"));
+					oos111.writeObject(indices); // recording all pages of this
+													// table
+					oos111.close();
+					return;
+				}
 			}
 			/*
-			 * Additional column added for the exact time when the record was
-			 * inserted in the database.
+			 * New Page created and added at the end of the LinkedList
+			 * concerning the table.
 			 */
+			Page tempPage = new Page();
+			File tempFile = new File("classes/" + strTableName + f.size() + ".class");
+			IndexCouple tempIndex = new IndexCouple(0, null);
+			p.add(tempPage);
+			/*
+			 * New file added at the end of the LinkedList concerning the table.
+			 */
+			tempFile = new File("classes/" + strTableName + f.size() + ".class");
+			f.add(tempFile);
+			ind.add(tempIndex);
 			rowData[rowData.length - 1] = new Couple();
 			rowData[rowData.length - 1].setKey("TouchDate");
 			rowData[rowData.length - 1].setValue(Instant.now());
@@ -488,29 +708,40 @@ public class DBApp {
 			Couple[] rowInfo = metaData.get(strTableName);
 			Object primaryKey = null;
 
-			for (int i = 0; i < rowData.length; i++) { // getting primary key
+			for (int i = 0; i < rowData.length; i++) { // getting
+														// primary
+														// key
 				// value
 				if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
 					primaryKey = rowData[i].getValue();
 					break;
 				}
 			}
-			pages.put(strTableName, p);
-			files.put(strTableName, f);
-			tempPage.add(primaryKey, rowData); // Record added to the page.
+			// pages.put(strTableName, p);
+			// files.put(strTableName, f);
+			Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
+																	// added
+																	// to
+																	// the
+																	// page.
+			if (tobeAdded != null)
+				unlocatedData.add(tobeAdded);
 			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
-			oos.writeObject(tempPage); // Record saved in the .class file.
+			oos.writeObject(tempPage); // Record saved in the .class
+										// file.
 			oos.close();
 			ObjectOutputStream oos1 = new ObjectOutputStream(
 					new FileOutputStream("classes/" + strTableName + "files.class"));
-			oos1.writeObject(files); // Recording table's associated files info
+			oos1.writeObject(files); // Recording table's associated
+										// files
+										// info
 			oos1.close();
 			ObjectOutputStream oos11 = new ObjectOutputStream(
 					new FileOutputStream("classes/" + strTableName + "pages.class"));
-			oos11.writeObject(pages); // recording all pages of this table
+			oos11.writeObject(pages); // recording all pages of this
+										// table
 			oos11.close();
 		}
-
 	}
 
 	/***
@@ -711,6 +942,27 @@ public class DBApp {
 			}
 		}
 		return primaryKey;
+	}
+
+	/***
+	 * Method used for finding the primary column.
+	 * 
+	 * @param rowData:
+	 *            Record from a certain table.
+	 * @param strTableName:
+	 *            Table name used for finding the primary column for this table.
+	 */
+	private Object findPrimaryColumn(Couple[] rowData, String strTableName) throws ClassNotFoundException, IOException {
+		HashMap<String, Couple[]> metaData = readMetaData();
+		Couple[] rowInfo = metaData.get(strTableName);
+		String primaryCol = null;
+		for (int i = 0; i < rowData.length; i++) { // getting primary key value
+			if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
+				primaryCol = rowData[i].getKey();
+				break;
+			}
+		}
+		return primaryCol;
 	}
 
 	/***

@@ -18,6 +18,15 @@ import java.util.Set;
 public class Page implements Serializable, Comparator<Map.Entry<String, Integer>> {
 	private static final long serialVersionUID = 1L;
 	public LinkedHashMap<Object, Couple[]> page;
+
+	public int getMax() {
+		return max;
+	}
+
+	public void setMax(int max) {
+		this.max = max;
+	}
+
 	public int max;
 	public static String tableName;
 
@@ -29,23 +38,33 @@ public class Page implements Serializable, Comparator<Map.Entry<String, Integer>
 		maxPage.load(read);
 		max = Integer.parseInt(maxPage.getProperty("MaximumRowsCountinPage"));
 	}
-	public LinkedHashMap<Object, Couple[]> sortMapByKeys() {	 
-	    List<Map.Entry<Object, Couple[]>> entries 
-	      = new ArrayList<>(page.entrySet());
-	    Collections.sort(entries, new Comparator<Entry<Object, Couple[]>>() {
+
+	public LinkedHashMap<Object, Couple[]> sortMapByKeys() {
+		List<Map.Entry<Object, Couple[]>> entries = new ArrayList<>(page.entrySet());
+		Collections.sort(entries, new Comparator<Entry<Object, Couple[]>>() {
 			public int compare(Entry<Object, Couple[]> arg0, Entry<Object, Couple[]> arg1) {
 				return ((Integer) arg0.getKey()).compareTo((Integer) arg1.getKey());
 			}
-	    });
-	    LinkedHashMap<Object, Couple[]> sortedMap = new LinkedHashMap<>();
-	    for (Map.Entry<Object, Couple[]> entry : entries) {
-	        sortedMap.put(entry.getKey(), entry.getValue());
-	    }
-	    return sortedMap;
+		});
+		LinkedHashMap<Object, Couple[]> sortedMap = new LinkedHashMap<>();
+		for (Map.Entry<Object, Couple[]> entry : entries) {
+			sortedMap.put(entry.getKey(), entry.getValue());
+		}
+		return sortedMap;
 	}
-	public void add(Object pKey, Couple[] row) {
+
+	public Couple[] add(Object pKey, Couple[] row) {
 		page.put(pKey, row);
 		setPage(sortMapByKeys());
+		if (page.size() <= max + 1) {
+			System.out.println("All good");
+		} else {
+			System.out.println("Something's wrong");
+		}
+		if (page.size() > max) {
+			return page.remove(page.keySet().toArray()[page.size() - 1]);
+		}
+		return null;
 	}
 
 	public LinkedHashMap<Object, Couple[]> getPage() {
@@ -64,11 +83,8 @@ public class Page implements Serializable, Comparator<Map.Entry<String, Integer>
 		Page.tableName = tableName;
 	}
 
-	public boolean full() {
-		if (page.size() == max) {
-			return true;
-		}
-		return false;
+	public int full() {
+		return max - page.size();
 	}
 
 	public int compare(Entry<String, Integer> c0, Entry<String, Integer> c1) {
