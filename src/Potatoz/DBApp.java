@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.Instant;
 import java.util.*;
+import java.util.Map.Entry;
 
 public class DBApp {
 	static StringBuilder sb;
@@ -322,39 +323,41 @@ public class DBApp {
 	public LinkedList<IndexCouple> sortWithRef(String strTableName, String strColName, Object type)
 			throws ClassNotFoundException, IOException {
 		LinkedList<Page> tempPages = readTablePages(strTableName).get(strTableName);
-		LinkedList records;
+		LinkedList<RecordReference> records = new LinkedList<RecordReference>();
 		LinkedList<IndexCouple> tempSecInd = new LinkedList<IndexCouple>();
-		String strs = type.toString();
-		switch (strs.substring(10)) {
-		case "String":
-			records = new LinkedList<String>();
-			break;
-		case "Double":
-			records = new LinkedList<Double>();
-			break;
-		case "Integer":
-			records = new LinkedList<Integer>();
-			break;
-		default:
-			records = new LinkedList<Integer>();
-		}
+		String strs = type.toString().substring(10);
+		//
+		// switch (strs.substring(10)) {
+		// case "String":
+		// s = new LinkedList<String>();
+		// break;
+		// case "Double":
+		// records = new LinkedList<Double>();
+		// break;
+		// case "Integer":
+		// records = new LinkedList<Integer>();
+		// break;
+		// default:
+		// records = new LinkedList<Integer>();
+		// }
 		for (Page page : tempPages) {
 			Object[] keys = page.getPage().keySet().toArray();
-			for (Object object : keys) {
-				Couple[] c = page.getPage().get(object);
+			for (int count = 0; count < keys.length; count++) {
+				Couple[] c = page.getPage().get(keys[count]);
 				for (int i = 0; i < c.length; i++) {
 					if (c[i].getKey().equals(strColName)) {
-						records.add(c[i].getValue());
+						records.add(new RecordReference(c[i].getValue(), count, strs));
 					}
 				}
 			}
 		}
+
 		Collections.sort(records);
 		for (int i = 0; i < records.size(); i++) {
 			if (i % 2 == 0) {
-				tempSecInd.add(new IndexCouple(records.get(i), null));
+				tempSecInd.add(new IndexCouple(records.get(i).getContent(), null));
 			} else
-				tempSecInd.getLast().setLast(records.get(i));
+				tempSecInd.getLast().setLast(records.get(i).getContent());
 
 		}
 		return tempSecInd;
