@@ -464,7 +464,7 @@ public class DBApp {
 				oos11.close();
 				ObjectOutputStream oos111 = new ObjectOutputStream(
 						new FileOutputStream("classes/" + strTableName + "indices.class"));
-				oos111.writeObject(indices); // recording all pages of this
+				oos111.writeObject(indices); // recording all indices of this
 												// table
 				oos111.close();
 				return;
@@ -477,6 +477,7 @@ public class DBApp {
 		Page tempPage = new Page();
 		File tempFile = new File("classes/" + strTableName + f.size() + ".class");
 		IndexCouple tempIndex = new IndexCouple(0, null);
+		tempIndex.setFirst((Integer) number);
 		p.add(tempPage);
 		/*
 		 * New file added at the end of the LinkedList concerning the table.
@@ -523,7 +524,13 @@ public class DBApp {
 				new FileOutputStream("classes/" + strTableName + "pages.class"));
 		oos11.writeObject(pages); // recording all pages of this
 									// table
+
 		oos11.close();
+		ObjectOutputStream oos111 = new ObjectOutputStream(
+				new FileOutputStream("classes/" + strTableName + "indices.class"));
+		oos111.writeObject(indices); // recording all indices of this
+										// table
+		oos111.close();
 	}
 
 	/**
@@ -545,26 +552,6 @@ public class DBApp {
 		if (!tableExists(strTableName)) {
 			System.out.println("From Database: Table doesn't exist");
 		} else {
-			FileInputStream fis = new FileInputStream("classes/" + strTableName + ".class");
-			/*
-			 * Following if() will be executed if the page contains records.
-			 */
-			if (fis.available() > 0) {
-				ObjectInputStream ois = new ObjectInputStream(fis);
-				Page readPage = (Page) (ois.readObject());
-				LinkedHashMap<Object, Couple[]> table = readPage.getPage();
-				ois.close();
-				Object[] pkeys = table.keySet().toArray();
-				/*
-				 * Assuring each record has a unique key in the entire table.
-				 */
-				for (int i = 0; i < pkeys.length; i++) {
-					if (htblColNameValue.containsValue(pkeys[i])) {
-						System.out.println("From Database: Record with a similar id exists.");
-						return;
-					}
-				}
-			}
 			/*
 			 * Retrieving previously stored Hashtables for tables' files and
 			 * pages and re-assigning class's instance variables with them.
@@ -581,6 +568,38 @@ public class DBApp {
 			if (tempIndices != null) {
 				indices = tempIndices;
 			}
+			LinkedList<Page> p = pages.get(strTableName);
+			LinkedList<File> f = files.get(strTableName);
+			LinkedList<IndexCouple> ind = indices.get(strTableName);
+			for (int fi = 0; fi < f.size(); fi++) {
+				FileInputStream fis;
+				if (fi == 0)
+					fis = new FileInputStream("classes/" + strTableName + ".class");
+				else
+					fis = new FileInputStream("classes/" + strTableName + fi + ".class");
+				/*
+				 * Following if() will be executed if the page contains records.
+				 */
+				if (fis.available() > 0) {
+					ObjectInputStream ois = new ObjectInputStream(fis);
+					Page readPage = (Page) (ois.readObject());
+					LinkedHashMap<Object, Couple[]> table = readPage.getPage();
+					ois.close();
+					Object[] pkeys = table.keySet().toArray();
+					/*
+					 * Assuring each record has a unique key in the entire
+					 * table.
+					 */
+					for (int i = 0; i < pkeys.length; i++) {
+						if (htblColNameValue.containsValue(pkeys[i])) {
+							System.out.println("From Database: Record with a similar id exists.");
+							return;
+						}
+					}
+				}
+				fis.close();
+			}
+
 			/*
 			 * Table's keys and types retrieved for insertion checks.
 			 */
@@ -618,24 +637,23 @@ public class DBApp {
 				rowData[i].setKey((String) keys[i]);
 				rowData[i].setValue(value);
 			}
-			LinkedList<Page> p = pages.get(strTableName);
-			LinkedList<File> f = files.get(strTableName);
-			LinkedList<IndexCouple> ind = indices.get(strTableName);
+
 			Object number = findPrimaryKey(rowData, strTableName);
 			for (int counter = 0; counter < p.size(); counter++) {
 				Page tempPage = p.get(counter);
 				File tempFile = f.get(counter);
 				IndexCouple tempIndex = ind.get(counter);
-				if (tempIndex.inRange((Integer) number, counter)) {
+				if (tempPage.full() > 0 || tempIndex.inRange((Integer) number, counter)) {
 					// && tempPage.full() > 0
 					/*
 					 * Additional column added for the exact time when the
 					 * record was inserted in the database.
 					 */
-					if (tempPage.full() == tempPage.max)
-						tempIndex.setFirst((Integer) number);
-					if (tempPage.full() <= 1)
-						tempIndex.setLast((Integer) number);
+					// if (tempPage.full() == tempPage.max || (Integer)
+					// tempIndex.getFirst() >= (Integer) number)
+					// tempIndex.setFirst((Integer) number);
+					// if (tempPage.full() <= 1)
+					// tempIndex.setLast((Integer) number);
 					rowData[rowData.length - 1] = new Couple();
 					rowData[rowData.length - 1].setKey("TouchDate");
 					rowData[rowData.length - 1].setValue(Instant.now());
@@ -659,10 +677,22 @@ public class DBApp {
 																			// to
 																			// the
 																			// page.
-					if (tobeAdded != null)
+					if (tempPage.full() == tempPage.max - 1 || (Integer) tempIndex.getFirst() >= (Integer) number)
+						tempIndex.setFirst((Integer) number);
+					if (tempPage.full() <= 1) {
+						tempIndex
+								.setLast(
+										(Integer) findPrimaryKey(
+												tempPage.getPage()
+														.get(tempPage.getPage().keySet()
+																.toArray()[tempPage.getPage().size() - 1]),
+												strTableName));
+					}
+					if (tobeAdded != null) {
 						// unlocatedData.add(tobeAdded);
+						number = findPrimaryKey(tobeAdded, strTableName);
 						insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
-
+					}
 					ObjectOutputStream oos = new ObjectOutputStream(
 							new FileOutputStream(files.get(strTableName).getLast()));
 					oos.writeObject(tempPage); // Record saved in the .class
