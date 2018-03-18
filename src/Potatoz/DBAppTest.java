@@ -37,6 +37,7 @@ public class DBAppTest {
 		htblColNameValue.put("name", new String("Hany Mohamed"));
 		htblColNameValue.put("gpa", new Double(1.0));
 		app.insertIntoTable(strTableName, htblColNameValue);
+		app.createBRINIndex("Students", "name");
 		htblColNameValue.clear();
 		System.out.println("- Trying to insert a duplicate record.");
 		htblColNameValue.put("id", new Integer(5674567));
