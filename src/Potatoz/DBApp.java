@@ -618,6 +618,7 @@ public class DBApp {
 		 * tables.
 		 */
 		HashMap<String, Couple[]> metaData = readMetaData();
+		int insertedIn = 0;
 		if (!tableExists(strTableName)) {
 			System.out.println("From Database: Table doesn't exist");
 		} else {
@@ -762,6 +763,7 @@ public class DBApp {
 						number = findPrimaryKey(tobeAdded, strTableName);
 						insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
 					}
+					updateBRIN();
 					ObjectOutputStream oos = new ObjectOutputStream(
 							new FileOutputStream(files.get(strTableName).getLast()));
 					oos.writeObject(tempPage); // Record saved in the .class
@@ -841,6 +843,11 @@ public class DBApp {
 										// table
 			oos11.close();
 		}
+	}
+
+	public void updateBRIN() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/***
