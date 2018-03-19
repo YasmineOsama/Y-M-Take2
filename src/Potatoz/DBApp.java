@@ -19,8 +19,10 @@ public class DBApp {
 	static Hashtable<String, LinkedList<File>> files;
 	static Hashtable<String, LinkedList<Page>> pages;
 	static Hashtable<String, LinkedList<IndexCouple>> indices;
-	static Hashtable<String, Hashtable<String, LinkedList<DensePage>>> secIndices;
+	static Hashtable<String, Hashtable<String, LinkedList<DensePage>>> dense;
+	static Hashtable<String, Hashtable<String, LinkedList<BRINPage>>> secIndices;
 	int max;
+	int maxBRIN;
 	LinkedList<Couple[]> unlocatedData;
 
 	/**
@@ -75,6 +77,7 @@ public class DBApp {
 		Properties maxPage = new Properties();
 		maxPage.load(read);
 		max = Integer.parseInt(maxPage.getProperty("MaximumRowsCountinPage"));
+		maxBRIN = Integer.parseInt(maxPage.getProperty("BRINSize"));
 		String title = "Table Name, Column Name, Column Type, Key, Indexed";
 		String fileString = "data/metadata.csv";
 		StringBuilder sb2 = new StringBuilder();
@@ -89,7 +92,8 @@ public class DBApp {
 		files = new Hashtable<String, LinkedList<File>>();
 		pages = new Hashtable<String, LinkedList<Page>>();
 		indices = new Hashtable<String, LinkedList<IndexCouple>>();
-		secIndices = new Hashtable<String, Hashtable<String, LinkedList<DensePage>>>();
+		dense = new Hashtable<String, Hashtable<String, LinkedList<DensePage>>>();
+		secIndices = new Hashtable<String, Hashtable<String, LinkedList<BRINPage>>>();
 		storeInstances();
 		/*
 		 * Hashtables keeping track for every file and page created for all
@@ -111,6 +115,10 @@ public class DBApp {
 		oos1111.writeObject(secIndices); // recording all pages of this
 											// table
 		oos1111.close();
+		ObjectOutputStream oos11111 = new ObjectOutputStream(new FileOutputStream("classes/dense_indices.class"));
+		oos11111.writeObject(dense); // recording all pages of this
+										// table
+		oos11111.close();
 	}
 
 	/**
@@ -207,7 +215,7 @@ public class DBApp {
 			files.put(strTableName, tempfileList);
 			pages.put(strTableName, temppageList);
 			indices.put(strTableName, tempindexList);
-			secIndices.put(strTableName, tempSecInd);
+			dense.put(strTableName, tempSecInd);
 			// HashMap<String, LinkedList<Object>> tempunikey = new
 			// HashMap<String, LinkedList<Object>>();
 			// tempunikey.put(strClusteringKeyColumn, new LinkedList<Object>());
@@ -308,22 +316,22 @@ public class DBApp {
 			// create a file for indexing
 			// sort data
 			// store references for elements in hashtable
-			Hashtable<String, LinkedList<DensePage>> tempMainSecInd = readTableSecIndices(strTableName);
-			createDensePages(strTableName, strColName, type);
-
-			Hashtable<String, LinkedList<DensePage>> tblSecInd = tempMainSecInd;
-
-			if (tblSecInd.contains(strColName))
+			Hashtable<String, LinkedList<BRINPage>> tempMainSecInd = readTableSecInd(strTableName);
+			// createDensePages(strTableName, strColName, type);
+			if (tempMainSecInd == null)
+				tempMainSecInd = new Hashtable<String, LinkedList<BRINPage>>();
+			else if (tempMainSecInd.contains(strColName))
 				return;
-			LinkedList<DensePage> tempSecInd = sortWithRef(strTableName, strColName, type);
-			tblSecInd.put(strColName, tempSecInd);
+			LinkedList<BRINPage> tempSecInd = sortWithRef(createDensePages(strTableName, strColName, type), strColName,
+					strTableName);
+			tempMainSecInd.put(strColName, tempSecInd);
 			storeInstances();
 		}
 	}
 
-	private void createDensePages(String strTableName, String strColName, Object t)
+	private LinkedList<DensePage> createDensePages(String strTableName, String strColName, Object t)
 			throws FileNotFoundException, IOException, ClassNotFoundException {
-		Hashtable<String, Hashtable<String, LinkedList<DensePage>>> tempMainDenseInd = new Hashtable<String, Hashtable<String, LinkedList<DensePage>>>();
+		Hashtable<String, LinkedList<DensePage>> tempMainDenseInd = readTableDense(strTableName);
 		LinkedList<DensePage> densePages = new LinkedList<DensePage>();
 		LinkedList<File> tempFiles = readTableFiles(strTableName);
 		LinkedList<RecordReference> tempToSort = new LinkedList<RecordReference>();
@@ -361,41 +369,52 @@ public class DBApp {
 			fis.close();
 		}
 		Collections.sort(tempToSort);
-		ObjectOutputStream oos = new ObjectOutputStream(
-				new FileOutputStream("classes/" + strTableName + "_" + strColName + "_dense.class"));
-		oos.writeObject(files); // Recording table's associated
-								// files
-								// info
-		oos.close();
+		for (int i = 0; i < tempToSort.size(); i++) {
+			if (i % max == 0)
+				densePages.add(new DensePage(strTableName, strColName));
+			densePages.getLast().add(tempToSort.get(i));
+		}
+		tempMainDenseInd.put(strColName, densePages);
+		storeInstances();
+		return densePages;
 	}
 
-	public LinkedList<DensePage> sortWithRef(String strTableName, String strColName, Object type)
+	public LinkedList<BRINPage> sortWithRef(LinkedList<DensePage> records, String col, String tbl)
 			throws ClassNotFoundException, IOException {
-		LinkedList<Page> tempPages = readTablePages(strTableName);
-		LinkedList<RecordReference> records = new LinkedList<RecordReference>();
-		LinkedList<DensePage> tempSecInd = new LinkedList<DensePage>();
-		String strs = type.toString().substring(10);
-		for (Page page : tempPages) {
-			Object[] keys = page.getPage().keySet().toArray();
-			for (int count = 0; count < keys.length; count++) {
-				Couple[] c = page.getPage().get(keys[count]);
-				for (int i = 0; i < c.length; i++) {
-					if (c[i].getKey().equals(strColName)) {
-						records.add(new RecordReference(c[i].getValue(), count, strs));
-					}
-				}
-			}
-		}
-
-		Collections.sort(records);
+		// String strTableName, String strColName, Object type
+		// LinkedList<Page> tempPages = readTablePages(strTableName);
+		// LinkedList<RecordReference> records = new
+		// LinkedList<RecordReference>();
+		// LinkedList<DensePage> tempSecInd = new LinkedList<DensePage>();
+		// String strs = type.toString().substring(10);
+		// for (Page page : tempPages) {
+		// Object[] keys = page.getPage().keySet().toArray();
+		// for (int count = 0; count < keys.length; count++) {
+		// Couple[] c = page.getPage().get(keys[count]);
+		// for (int i = 0; i < c.length; i++) {
+		// if (c[i].getKey().equals(strColName)) {
+		// records.add(new RecordReference(c[i].getValue(), count, strs));
+		// }
+		// }
+		// }
+		// }
+		//
+		// Collections.sort(records);
+		LinkedList<BRINPage> tempBRIN = new LinkedList<BRINPage>();
 		for (int i = 0; i < records.size(); i++) {
-			if (i % 2 == 0) {
-				tempSecInd.add(new IndexCouple(records.get(i).getContent(), null));
-			} else
-				tempSecInd.getLast().setLast(records.get(i).getContent());
+			RecordReference[] densePage = records.get(i).getDensePage();
+			for (int j = 0; j < densePage.length; j++) {
+				RecordReference recordReference = densePage[j];
+				if (i % maxBRIN == 0) {
+					tempBRIN.add(new BRINPage(col, tbl));
+					tempBRIN.getLast().add(new IndexCoupleReference(recordReference.getContent(), null, i));
+				} else
+					tempBRIN.getLast().getLast().setLast(recordReference.getContent());
+
+			}
 
 		}
-		return tempSecInd;
+		return tempBRIN;
 
 	}
 
@@ -452,18 +471,36 @@ public class DBApp {
 		return null;
 	}
 
-	public Hashtable<String, LinkedList<DensePage>> readTableSecIndices(String strTableName)
+	public Hashtable<String, LinkedList<DensePage>> readTableDense(String strTableName)
+			throws IOException, ClassNotFoundException {
+		FileInputStream fis = new FileInputStream("classes/dense_indices.class");
+		if (fis.available() > 0) {
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			@SuppressWarnings("unchecked")
+			Hashtable<String, Hashtable<String, LinkedList<DensePage>>> tempDense = (Hashtable<String, Hashtable<String, LinkedList<DensePage>>>) (ois
+					.readObject());
+			if (tempDense != null)
+				dense = tempDense;
+			ois.close();
+			return tempDense.get(strTableName);
+		}
+
+		fis.close();
+		return null;
+	}
+
+	public Hashtable<String, LinkedList<BRINPage>> readTableSecInd(String strTableName)
 			throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream("classes/second_indices.class");
 		if (fis.available() > 0) {
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			@SuppressWarnings("unchecked")
-			Hashtable<String, Hashtable<String, LinkedList<DensePage>>> tempSecIndices = (Hashtable<String, Hashtable<String, LinkedList<DensePage>>>) (ois
+			Hashtable<String, Hashtable<String, LinkedList<BRINPage>>> tempSec = (Hashtable<String, Hashtable<String, LinkedList<BRINPage>>>) (ois
 					.readObject());
-			if (tempSecIndices != null)
-				secIndices = tempSecIndices;
+			if (tempSec != null)
+				secIndices = tempSec;
 			ois.close();
-			return tempSecIndices.get(strTableName);
+			return tempSec.get(strTableName);
 		}
 
 		fis.close();
@@ -502,7 +539,7 @@ public class DBApp {
 	 *            and return the stored written-on pages for this table.
 	 */
 	public LinkedList<IndexCouple> readTableIndices(String strTableName) throws IOException, ClassNotFoundException {
-		FileInputStream fis = new FileInputStream("classes/" + strTableName + "_indices.class");
+		FileInputStream fis = new FileInputStream("classes/indices.class");
 		if (fis.available() > 0) {
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			@SuppressWarnings("unchecked")
@@ -558,24 +595,9 @@ public class DBApp {
 				ObjectOutputStream oos = new ObjectOutputStream(
 						new FileOutputStream(files.get(strTableName).getLast()));
 				oos.writeObject(tempPage); // Record saved in the .class
-											// file.
+				// file.
 				oos.close();
-				ObjectOutputStream oos1 = new ObjectOutputStream(
-						new FileOutputStream("classes/" + strTableName + "_files.class"));
-				oos1.writeObject(files); // Recording table's associated
-											// files
-											// info
-				oos1.close();
-				ObjectOutputStream oos11 = new ObjectOutputStream(
-						new FileOutputStream("classes/" + strTableName + "_pages.class"));
-				oos11.writeObject(pages); // recording all pages of this
-											// table
-				oos11.close();
-				ObjectOutputStream oos111 = new ObjectOutputStream(
-						new FileOutputStream("classes/" + strTableName + "_indices.class"));
-				oos111.writeObject(indices); // recording all indices of this
-												// table
-				oos111.close();
+				storeInstances();
 				return;
 			}
 		}
@@ -584,14 +606,14 @@ public class DBApp {
 		 * the table.
 		 */
 		Page tempPage = new Page();
-		File tempFile = new File("classes/" + strTableName + f.size() + ".class");
+		File tempFile = new File("classes/" + strTableName + "_data_" + f.size() + ".class");
 		IndexCouple tempIndex = new IndexCouple(0, null);
 		tempIndex.setFirst((Integer) number);
 		p.add(tempPage);
 		/*
 		 * New file added at the end of the LinkedList concerning the table.
 		 */
-		tempFile = new File("classes/" + strTableName + f.size() + ".class");
+		tempFile.createNewFile();
 		f.add(tempFile);
 		ind.add(tempIndex);
 		rowData[rowData.length - 1] = new Couple();
@@ -621,25 +643,9 @@ public class DBApp {
 			unlocatedData.add(tobeAdded);
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
 		oos.writeObject(tempPage); // Record saved in the .class
-									// file.
+		// file.
 		oos.close();
-		ObjectOutputStream oos1 = new ObjectOutputStream(
-				new FileOutputStream("classes/" + strTableName + "_files.class"));
-		oos1.writeObject(files); // Recording table's associated
-									// files
-									// info
-		oos1.close();
-		ObjectOutputStream oos11 = new ObjectOutputStream(
-				new FileOutputStream("classes/" + strTableName + "_pages.class"));
-		oos11.writeObject(pages); // recording all pages of this
-									// table
-
-		oos11.close();
-		ObjectOutputStream oos111 = new ObjectOutputStream(
-				new FileOutputStream("classes/" + strTableName + "_indices.class"));
-		oos111.writeObject(indices); // recording all indices of this
-										// table
-		oos111.close();
+		storeInstances();
 	}
 
 	/**
@@ -672,9 +678,9 @@ public class DBApp {
 			for (int fi = 0; fi < f.size(); fi++) {
 				FileInputStream fis;
 				if (fi == 0)
-					fis = new FileInputStream("classes/" + strTableName + ".class");
+					fis = new FileInputStream("classes/" + strTableName + "_data.class");
 				else
-					fis = new FileInputStream("classes/" + strTableName + fi + ".class");
+					fis = new FileInputStream("classes/" + strTableName + "_data_" + fi + ".class");
 				/*
 				 * Following if() will be executed if the page contains records.
 				 */
@@ -782,10 +788,16 @@ public class DBApp {
 					}
 					if (tobeAdded != null) {
 						// unlocatedData.add(tobeAdded);
+						ObjectOutputStream oos = new ObjectOutputStream(
+								new FileOutputStream(files.get(strTableName).getLast()));
+						oos.writeObject(tempPage); // Record saved in the .class
+						// file.
+						oos.close();
 						number = findPrimaryKey(tobeAdded, strTableName);
 						insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
 					}
 					updateBRIN(strTableName);
+
 					storeInstances();
 					return;
 				}
@@ -829,6 +841,10 @@ public class DBApp {
 																	// page.
 			if (tobeAdded != null)
 				unlocatedData.add(tobeAdded);
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
+			oos.writeObject(tempPage); // Record saved in the .class
+			// file.
+			oos.close();
 			storeInstances();
 		}
 	}

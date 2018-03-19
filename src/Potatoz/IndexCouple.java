@@ -3,6 +3,9 @@ package Potatoz;
 import java.io.Serializable;
 
 public class IndexCouple implements Serializable {
+	private static final long serialVersionUID = 1L;
+	Object first;
+	Object last;
 	public Object getFirst() {
 		return first;
 	}
@@ -19,9 +22,7 @@ public class IndexCouple implements Serializable {
 		this.last = last;
 	}
 
-	private static final long serialVersionUID = 1L;
-	Object first;
-	Object last;
+	
 
 	public IndexCouple(Object first, Object last) {
 		this.first = first;
