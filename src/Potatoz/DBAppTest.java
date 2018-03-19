@@ -68,7 +68,7 @@ public class DBAppTest {
 		htblColNameValue.put("name", new String("Zaky Noor"));
 		htblColNameValue.put("gpa", new Double(0.88));
 		app.insertIntoTable(strTableName, htblColNameValue);
-		FileInputStream fis = new FileInputStream("classes/Students.class");
+		FileInputStream fis = new FileInputStream("classes/Students_data.class");
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		Page p = (Page) ois.readObject();
 		HashMap<Object, Couple[]> metaData = p.getPage();
@@ -109,7 +109,7 @@ public class DBAppTest {
 		htblColNameValue.put("gpa", new Double(1.25));
 		app.insertIntoTable(strTableName, htblColNameValue);
 
-		fis = new FileInputStream("classes/Teachers.class");
+		fis = new FileInputStream("classes/Teachers_data.class");
 		ois = new ObjectInputStream(fis);
 		p = (Page) ois.readObject();
 		metaData = p.getPage();

@@ -394,7 +394,7 @@ public class DBApp {
 				if (j % maxBRIN == 0) {
 
 					tempBRIN.getLast().add(new IndexCoupleReference(recordReference.getContent(), null, i));
-				} else
+				} else if (recordReference != null)
 					tempBRIN.getLast().getLast().setLast(recordReference.getContent());
 
 			}
@@ -450,8 +450,13 @@ public class DBApp {
 			Hashtable<String, LinkedList<File>> tempFiles = (Hashtable<String, LinkedList<File>>) (ois.readObject());
 			if (tempFiles != null)
 				files = tempFiles;
+			LinkedList<File> tempVar = tempFiles.get(strTableName);
+			if (tempVar == null) {
+				tempVar = new LinkedList<File>();
+				tempFiles.put(strTableName, tempVar);
+			}
 			ois.close();
-			return tempFiles.get(strTableName);
+			return tempVar;
 		}
 		fis.close();
 		return null;
@@ -467,8 +472,13 @@ public class DBApp {
 					.readObject());
 			if (tempDense != null)
 				dense = tempDense;
+			Hashtable<String, LinkedList<DensePage>> tempVar = tempDense.get(strTableName);
+			if (tempVar == null) {
+				tempVar = new Hashtable<String, LinkedList<DensePage>>();
+				tempDense.put(strTableName, tempVar);
+			}
 			ois.close();
-			return tempDense.get(strTableName);
+			return tempVar;
 		}
 
 		fis.close();
@@ -485,8 +495,13 @@ public class DBApp {
 					.readObject());
 			if (tempSec != null)
 				secIndices = tempSec;
+			Hashtable<String, LinkedList<BRINPage>> tempVar = tempSec.get(strTableName);
+			if (tempVar == null) {
+				tempVar = new Hashtable<String, LinkedList<BRINPage>>();
+				tempSec.put(strTableName, tempVar);
+			}
 			ois.close();
-			return tempSec.get(strTableName);
+			return tempVar;
 		}
 
 		fis.close();
@@ -509,8 +524,13 @@ public class DBApp {
 			Hashtable<String, LinkedList<Page>> tempPages = (Hashtable<String, LinkedList<Page>>) (ois.readObject());
 			if (tempPages != null)
 				pages = tempPages;
+			LinkedList<Page> tempVar = tempPages.get(strTableName);
+			if (tempVar == null) {
+				tempVar = new LinkedList<Page>();
+				tempPages.put(strTableName, tempVar);
+			}
 			ois.close();
-			return tempPages.get(strTableName);
+			return tempVar;
 		}
 		fis.close();
 		return null;
@@ -533,8 +553,13 @@ public class DBApp {
 					.readObject());
 			if (tempIndices != null)
 				indices = tempIndices;
+			LinkedList<IndexCouple> tempVar = tempIndices.get(strTableName);
+			if (tempVar == null) {
+				tempVar = new LinkedList<IndexCouple>();
+				tempIndices.put(strTableName, tempVar);
+			}
 			ois.close();
-			return tempIndices.get(strTableName);
+			return tempVar;
 		}
 		fis.close();
 		return null;
