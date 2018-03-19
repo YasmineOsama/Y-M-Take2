@@ -354,16 +354,19 @@ public class DBApp {
 				 * Assuring each record has a unique key in the entire table.
 				 */
 				int type = 0;
-				Couple[] temp = table.get(pkeys);
-				for (int i = 0; i < temp.length; i++) {
-					if (strColName.equals(temp[i].getKey())) {
-						type = i;
-						break;
+				for (int i = 0; i < pkeys.length; i++) {
+					Couple[] temp = table.get(pkeys[i]);
+					for (int k = 0; k < temp.length; k++) {
+						if (strColName.equals(temp[k].getKey())) {
+							type = k;
+							break;
+						}
 					}
 				}
 
 				for (int i = 0; i < pkeys.length; i++) {
-					tempToSort.add(new RecordReference(table.get(pkeys[i])[type].getValue(), fi, t.toString()));
+					tempToSort.add(
+							new RecordReference(table.get(pkeys[i])[type].getValue(), fi, t.toString().substring(10)));
 				}
 			}
 			fis.close();
@@ -381,32 +384,15 @@ public class DBApp {
 
 	public LinkedList<BRINPage> sortWithRef(LinkedList<DensePage> records, String col, String tbl)
 			throws ClassNotFoundException, IOException {
-		// String strTableName, String strColName, Object type
-		// LinkedList<Page> tempPages = readTablePages(strTableName);
-		// LinkedList<RecordReference> records = new
-		// LinkedList<RecordReference>();
-		// LinkedList<DensePage> tempSecInd = new LinkedList<DensePage>();
-		// String strs = type.toString().substring(10);
-		// for (Page page : tempPages) {
-		// Object[] keys = page.getPage().keySet().toArray();
-		// for (int count = 0; count < keys.length; count++) {
-		// Couple[] c = page.getPage().get(keys[count]);
-		// for (int i = 0; i < c.length; i++) {
-		// if (c[i].getKey().equals(strColName)) {
-		// records.add(new RecordReference(c[i].getValue(), count, strs));
-		// }
-		// }
-		// }
-		// }
-		//
-		// Collections.sort(records);
 		LinkedList<BRINPage> tempBRIN = new LinkedList<BRINPage>();
 		for (int i = 0; i < records.size(); i++) {
 			RecordReference[] densePage = records.get(i).getDensePage();
+			if (i % maxBRIN == 0)
+				tempBRIN.add(new BRINPage(col, tbl));
 			for (int j = 0; j < densePage.length; j++) {
 				RecordReference recordReference = densePage[j];
-				if (i % maxBRIN == 0) {
-					tempBRIN.add(new BRINPage(col, tbl));
+				if (j % maxBRIN == 0) {
+
 					tempBRIN.getLast().add(new IndexCoupleReference(recordReference.getContent(), null, i));
 				} else
 					tempBRIN.getLast().getLast().setLast(recordReference.getContent());
@@ -590,13 +576,15 @@ public class DBApp {
 																		// to
 																		// the
 																		// page.
-				if (tobeAdded != null)
-					insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
 				ObjectOutputStream oos = new ObjectOutputStream(
 						new FileOutputStream(files.get(strTableName).getLast()));
 				oos.writeObject(tempPage); // Record saved in the .class
 				// file.
 				oos.close();
+				if (tobeAdded != null) {
+					insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
+				}
+
 				storeInstances();
 				return;
 			}
@@ -639,8 +627,6 @@ public class DBApp {
 																// to
 																// the
 																// page.
-		if (tobeAdded != null)
-			unlocatedData.add(tobeAdded);
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
 		oos.writeObject(tempPage); // Record saved in the .class
 		// file.
@@ -786,13 +772,14 @@ public class DBApp {
 																.toArray()[tempPage.getPage().size() - 1]),
 												strTableName));
 					}
+					ObjectOutputStream oos = new ObjectOutputStream(
+							new FileOutputStream(files.get(strTableName).getLast()));
+					oos.writeObject(tempPage); // Record saved in the .class
+					// file.
+					oos.close();
 					if (tobeAdded != null) {
 						// unlocatedData.add(tobeAdded);
-						ObjectOutputStream oos = new ObjectOutputStream(
-								new FileOutputStream(files.get(strTableName).getLast()));
-						oos.writeObject(tempPage); // Record saved in the .class
-						// file.
-						oos.close();
+
 						number = findPrimaryKey(tobeAdded, strTableName);
 						insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
 					}
@@ -839,8 +826,6 @@ public class DBApp {
 																	// to
 																	// the
 																	// page.
-			if (tobeAdded != null)
-				unlocatedData.add(tobeAdded);
 			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
 			oos.writeObject(tempPage); // Record saved in the .class
 			// file.
