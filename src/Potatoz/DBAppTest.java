@@ -114,7 +114,7 @@ public class DBAppTest {
 		p = (Page) ois.readObject();
 		metaData = p.getPage();
 		ois.close();
-		b = metaData.get(5674567);
+		b = metaData.get(1234);
 		System.out.println("Displaying a record from the stored table 'Teachers' read from the disk:");
 		System.out.print(b[0].getKey() + ": ");
 		System.out.println(b[0].getValue());
