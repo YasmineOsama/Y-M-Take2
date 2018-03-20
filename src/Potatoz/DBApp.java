@@ -1662,11 +1662,13 @@ public class DBApp {
 
 		}
 		LinkedList<Object> finalRes = new LinkedList<Object>();
-		finalRes = result.get(0);
-		if (result.get(1).size() != 0)
+		if (result.get(1).size() == 0)
+			finalRes = result.get(0);
+		else
 			for (int j = 0; j < result.get(0).size(); j++) {
 				for (int j2 = 0; j2 < result.get(1).size(); j2++) {
-					if (result.get(0).get(j).equals(result.get(1).get(j2)))
+					if (findPrimaryKey((Couple[]) result.get(0).get(j), strTableName)
+							.equals(findPrimaryKey((Couple[]) result.get(1).get(j2), strTableName)))
 						finalRes.add(result.get(0).get(j));
 				}
 			}
