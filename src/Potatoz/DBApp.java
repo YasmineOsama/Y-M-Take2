@@ -115,16 +115,16 @@ public class DBApp {
 		oos111.close();
 		ObjectOutputStream oos1111 = new ObjectOutputStream(new FileOutputStream("classes/second_indices.class"));
 		oos1111.writeObject(secIndices); // recording all pages of this
-											// table
+		// table
 		oos1111.close();
 		ObjectOutputStream oos11111 = new ObjectOutputStream(new FileOutputStream("classes/dense_indices.class"));
 		oos11111.writeObject(dense); // recording all pages of this
-										// table
+		// table
 		oos11111.close();
 		ObjectOutputStream oos111111 = new ObjectOutputStream(
 				new FileOutputStream("classes/dense_indices_block.class"));
 		oos111111.writeObject(denseBlock); // recording all pages of this
-											// table
+		// table
 		oos111111.close();
 	}
 
@@ -601,7 +601,7 @@ public class DBApp {
 
 	public void insertNext(String strTableName, HashMap<String, Couple[]> metaData, Couple[] rowData, int counter,
 			LinkedList<Page> p, LinkedList<File> f, LinkedList<IndexCouple> ind, Object number)
-			throws FileNotFoundException, IOException, ClassNotFoundException {
+					throws FileNotFoundException, IOException, ClassNotFoundException {
 		int insertedIn = 0;
 		for (; counter < p.size(); counter++) {
 
@@ -622,8 +622,8 @@ public class DBApp {
 				Object primaryKey = null;
 
 				for (int i = 0; i < rowData.length; i++) { // getting
-															// primary
-															// key
+					// primary
+					// key
 					// value
 					if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
 						primaryKey = rowData[i].getValue();
@@ -634,10 +634,10 @@ public class DBApp {
 				// files.put(strTableName, f);
 				insertedIn = counter;
 				Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
-																		// added
-																		// to
-																		// the
-																		// page.
+				// added
+				// to
+				// the
+				// page.
 				ObjectOutputStream oos = new ObjectOutputStream(
 						new FileOutputStream(files.get(strTableName).getLast()));
 				oos.writeObject(tempPage); // Record saved in the .class
@@ -676,8 +676,8 @@ public class DBApp {
 		Object primaryKey = null;
 
 		for (int i = 0; i < rowData.length; i++) { // getting
-													// primary
-													// key
+			// primary
+			// key
 			// value
 			if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
 				primaryKey = rowData[i].getValue();
@@ -688,10 +688,10 @@ public class DBApp {
 		// files.put(strTableName, f);
 		insertedIn = counter;
 		Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
-																// added
-																// to
-																// the
-																// page.
+		// added
+		// to
+		// the
+		// page.
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
 		oos.writeObject(tempPage); // Record saved in the .class
 		// file.
@@ -812,8 +812,8 @@ public class DBApp {
 					Object primaryKey = null;
 
 					for (int i = 0; i < rowData.length; i++) { // getting
-																// primary
-																// key
+						// primary
+						// key
 						// value
 						if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
 							primaryKey = rowData[i].getValue();
@@ -824,19 +824,19 @@ public class DBApp {
 					// files.put(strTableName, f);
 					insertedIn = counter;
 					Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
-																			// added
-																			// to
-																			// the
-																			// page.
+					// added
+					// to
+					// the
+					// page.
 					if (tempPage.full() == tempPage.max - 1 || (Integer) tempIndex.getFirst() >= (Integer) number)
 						tempIndex.setFirst((Integer) number);
 					if (tempPage.full() <= 1) {
 						tempIndex
-								.setLast(
-										(Integer) findPrimaryKey(
-												tempPage.getPage()
-														.get(tempPage.getPage().keySet()
-																.toArray()[tempPage.getPage().size() - 1]),
+						.setLast(
+								(Integer) findPrimaryKey(
+										tempPage.getPage()
+										.get(tempPage.getPage().keySet()
+												.toArray()[tempPage.getPage().size() - 1]),
 												strTableName));
 					}
 					ObjectOutputStream oos = new ObjectOutputStream(
@@ -878,8 +878,8 @@ public class DBApp {
 			Object primaryKey = null;
 
 			for (int i = 0; i < rowData.length; i++) { // getting
-														// primary
-														// key
+				// primary
+				// key
 				// value
 				if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
 					primaryKey = rowData[i].getValue();
@@ -889,10 +889,10 @@ public class DBApp {
 			// pages.put(strTableName, p);
 			// files.put(strTableName, f);
 			Couple[] tobeAdded = tempPage.add(primaryKey, rowData); // Record
-																	// added
-																	// to
-																	// the
-																	// page.
+			// added
+			// to
+			// the
+			// page.
 			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(files.get(strTableName).getLast()));
 			oos.writeObject(tempPage); // Record saved in the .class
 			// file.
@@ -1044,7 +1044,7 @@ public class DBApp {
 						readTable.setPage(table);
 						ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
 						oos.writeObject(readTable); // Record saved in the
-													// .class file.
+						// .class file.
 						oos.close();
 						storeInstances();
 						insertIntoTable(strTableName, updatedRow);
@@ -1103,7 +1103,7 @@ public class DBApp {
 		for (int i = 0; i < tableFiles.size(); i++) {
 			if (tempInd.get(i) != null)
 				if ((Integer) tempInd.get(i).getFirst() <= (Integer) key
-						&& (Integer) tempInd.get(i).getLast() >= (Integer) key) {
+				&& (Integer) tempInd.get(i).getLast() >= (Integer) key) {
 
 					File tableFile = tableFiles.get(i);
 					FileInputStream fis = new FileInputStream(tableFile);
@@ -1121,7 +1121,7 @@ public class DBApp {
 							table.remove(key);
 							ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tableFile.getName()));
 							oos.writeObject(readTable); // Record saved in the
-														// .class file.
+							// .class file.
 							oos.close();
 							Hashtable<String, LinkedList<RecordReference>> tempDense = readTableDenseBlock(
 									strTableName);
@@ -1151,15 +1151,6 @@ public class DBApp {
 		return null;
 	}
 
-	// public void sortIndexAfterRemove(LinkedList<IndexCouple> temp, Object
-	// key) {
-	// for (int i = 0; i < temp.size(); i++) {
-	// if ((Integer) temp.get(i).getFirst() <= (Integer) key && (Integer)
-	// temp.get(i).getLast() >= (Integer) key) {
-	//
-	// }
-	// }
-	// }
 
 	/***
 	 * On an existing record deletion.
@@ -1214,8 +1205,10 @@ public class DBApp {
 					 */
 					for (int j = 0; j < arrayString.length; j++) {
 						if (recordFound((Couple[]) arrayString[j], rowData)) {
+							Couple[] get = table.get(arrayString[j]);
 							Object primaryKey = findPrimaryKey((Couple[]) arrayString[j], strTableName);
 							table.remove(primaryKey);
+							deleteRecordById(strTableName, primaryKey, get);
 							recordsDeleted++;
 						}
 					}
@@ -1225,7 +1218,7 @@ public class DBApp {
 					readTable.setPage(table);
 					ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tableFile.getName()));
 					oos.writeObject(readTable); // Record saved in the
-												// .class
+					// .class
 					// file.
 					oos.close();
 					storeInstances();
@@ -1303,8 +1296,269 @@ public class DBApp {
 
 	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(String strTableName, String strColumnName, Object[] objarrValues,
-			String[] strarrOperators) {
+			String[] strarrOperators) throws ClassNotFoundException, IOException {
+		Collection<Object> result = new ArrayList<Object>();
+		if(strarrOperators.length > 2 || strarrOperators.length < 1) {
+			System.out.println("From Database: invalid number of operators");
+		}
+		for(int i = 0; i< strarrOperators.length; i++) {
+			String op = strarrOperators[i];
+			if(!(op.equals(">")||op.equals("<")||op.equals(">=")||op.equals("<="))) {
+				System.out.println("From Database: Invalid Operator");
+				return null;
+			}
+		}
+		if(!(strarrOperators.length == objarrValues.length)) {
+			System.out.println("From Database: Number of operators must equal number of values");
+			return null;
+		}
+		HashMap<String, Couple[]> metaData = readMetaData();
+		if (!tableExists(strTableName)) {
+			System.out.println("From Database: Table doesn't exist");
+			return null;
+		} else {
+			Object value = null;
+			Couple[] tableData = metaData.get(strTableName);
+			for(int i=0; i< tableData.length; i++) {
+				if(tableData[i].getKey() == strColumnName) {
+					value = tableData[i].getValue();
+					break;
+				}
+			}
+			if(value == null) {
+				System.out.println("From Database: Invalid column name");
+				return null;
+			}
+			for(int i = 0; i < objarrValues.length; i++) {
+				if (!objarrValues[i].getClass().toString().substring(6).equals(value.toString())) {
+					System.out.println("From Database: value type is incompatible with column type");
+					return null;
+				}
+			}
+			String type = null;
+			if(objarrValues[0].getClass().toString().substring(6).equals("java.lang.Integer")) {
+				type = "int";
+			}
+			if(objarrValues[0].getClass().toString().substring(6).equals("java.lang.String")) {
+				type = "str";
+			}
+			if(objarrValues[0].getClass().toString().substring(6).equals("java.lang.double")) {
+				type = "dbl";
+			}
+			createBRINIndex(strTableName, strColumnName);
+			if(strColumnName.equals(tableData[0])){
+				LinkedList<IndexCouple> index = readTableIndices(strTableName);
+				for(int i = 0; i < objarrValues.length; i++) {
+					String op = strarrOperators [i];
+					if(i > 0) {
+						switch(op) {
+						case ">": op = "<"; break;
+						case "<": op = ">"; break;
+						case ">=": op = "<="; break;
+						case "<=": op = "<=";
+						}
+					}
+					for(int j = 0; j < index.size(); j++) {
+						switch(type) {
+						case "int": {
+							int obvalue = (int) objarrValues [i];
+							int first = (int) index.get(j).getFirst();
+							int last = (int) index.get(j).getLast();
+							switch(op) {
+							case ">": {
+								if(obvalue > first) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue <= (int) pkeys [k]) {
+											break;
+										}
+										result.add(pkeys[k]);
+									}
+								}
+								break;
+							}
+							case "<": {
+								if(obvalue < last) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue < (int) pkeys [k]) {
+											result.add(pkeys[k]);
+										}
+									}
+								}
+								break;
+							}
+							case ">=": {
+								if(obvalue >= first) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue < (int) pkeys [k]) {
+											break;
+										}
+										result.add(pkeys[k]);
+									}
+								}
+								break;
+							}
+							case "<=": {
+								if(obvalue <= last) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue <= (int) pkeys [k]) {
+											result.add(pkeys[k]);
+										}
+									}
+								}
+							}
+							}
+							break;
+						}
+						case "str": {
+							String obvalue = (String) objarrValues [i];
+							String first = (String) index.get(j).getFirst();
+							String last = (String) index.get(j).getLast();
+							switch(op) {
+							case ">": {
+								if(obvalue.compareTo(first) > 0) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue.compareTo((String) pkeys [k]) <= 0) {
+											break;
+										}
+										result.add(pkeys[k]);
+									}
+								}
+								break;
+							}
+							case "<": {
+								if(obvalue.compareTo(last) < 0) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue.compareTo((String) pkeys [k]) < 0 ) {
+											result.add(pkeys[k]);
+										}
+									}
+								}
+								break;
+							}
+							case ">=": {
+								if(obvalue.compareTo(first) >= 0) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue.compareTo((String) pkeys [k]) < 0) {
+											break;
+										}
+										result.add(pkeys[k]);
+									}
+								}
+								break;
+							}
+							case "<=": {
+								if(obvalue.compareTo(last) <= 0) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue.compareTo((String) pkeys [k]) <= 0) {
+											result.add(pkeys[k]);
+										}
+									}
+								}
+							}
+							}
+							break;
+
+						}
+						case "dbl":
+							double obvalue = (double) objarrValues [i];
+							double first = (double) index.get(j).getFirst();
+							double last = (double) index.get(j).getLast();
+							switch(op) {
+							case ">": {
+								if(obvalue > first) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue <= (double) pkeys [k]) {
+											break;
+										}
+										result.add(pkeys[k]);
+									}
+								}
+								break;
+							}
+							case "<": {
+								if(obvalue < last) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue < (double) pkeys [k]) {
+											result.add(pkeys[k]);
+										}
+									}
+								}
+								break;
+							}
+							case ">=": {
+								if(obvalue >= first) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue < (double) pkeys [k]) {
+											break;
+										}
+										result.add(pkeys[k]);
+									}
+								}
+								break;
+							}
+							case "<=": {
+								if(obvalue <= last) {
+									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+									Object[] pkeys = table.keySet().toArray();
+									for(int k = 0; k<pkeys.length; k++) {
+										if(obvalue <= (double) pkeys [k]) {
+											result.add(pkeys[k]);
+										}
+									}
+								}
+							}
+							}
+							break;
+						}
+					}
+				}
+			}
+			else {
+				Hashtable<String, LinkedList<BRINPage>> secInd = readTableSecInd (strTableName);
+			}
+
+
+		}
+
 		return null;
+	}
+	public LinkedHashMap<Object, Couple[]> table(int page, String strTableName) throws IOException, ClassNotFoundException {
+		FileInputStream fis;
+		if (page == 0)
+			fis = new FileInputStream("classes/" + strTableName + "_data.class");
+		else
+			fis = new FileInputStream("classes/" + strTableName + "_data_" + page + ".class");
+		if (fis.available() > 0) {
+			ObjectInputStream ois = new ObjectInputStream(fis);
+			Page readTable = (Page) (ois.readObject());
+			ois.close();
+			return readTable.getPage();
+		}
+		fis.close();
+		return null;
+
 	}
 
 }
