@@ -604,7 +604,7 @@ public class DBApp {
 			throws FileNotFoundException, IOException, ClassNotFoundException {
 		int insertedIn = 0;
 		for (; counter < p.size(); counter++) {
-			
+
 			Page tempPage = p.get(counter);
 			File tempFile = f.get(counter);
 			IndexCouple tempIndex = ind.get(counter);
@@ -969,11 +969,19 @@ public class DBApp {
 			 * Following if() will be executed if the page contains records.
 			 */
 			int index = 0;
-			LinkedList<File> tableFiles = readTableFiles(strTableName);
-			for (int i = 0; i < tableFiles.size(); i++) {
-				File tableFile = tableFiles.get(i);
-				FileInputStream fis = new FileInputStream(tableFile);
-
+			LinkedList<File> f = readTableFiles(strTableName);
+			LinkedList<Page> p = readTablePages(strTableName);
+			LinkedList<IndexCouple> ind = readTableIndices(strTableName);
+			for (int fi = 0; fi < f.size(); fi++) {
+				FileInputStream fis;
+				String fileName;
+				if (fi == 0) {
+					fileName = "classes/" + strTableName + "_data.class";
+					fis = new FileInputStream(fileName);
+				} else {
+					fileName = "classes/" + strTableName + "_data_" + fi + ".class";
+					fis = new FileInputStream(fileName);
+				}
 				if (fis.available() > 0) {
 					ObjectInputStream ois = new ObjectInputStream(fis);
 					Page readTable = (Page) (ois.readObject());
@@ -1001,6 +1009,11 @@ public class DBApp {
 						Hashtable<String, Object> updatedRow = newRow(get, htblColNameValue);
 						table.remove(arrayString[index]);
 						readTable.setPage(table);
+						ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
+						oos.writeObject(readTable); // Record saved in the
+													// .class
+						// file.
+						oos.close();
 						storeInstances();
 						insertIntoTable(strTableName, updatedRow);
 						System.out.println("From Database: Table updated.");
@@ -1108,6 +1121,11 @@ public class DBApp {
 					 * Object re-written on the disk after the deletion.
 					 */
 					readTable.setPage(table);
+					ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tableFile.getName()));
+					oos.writeObject(readTable); // Record saved in the
+												// .class
+					// file.
+					oos.close();
 					storeInstances();
 				}
 			}
