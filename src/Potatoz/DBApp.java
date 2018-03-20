@@ -319,7 +319,7 @@ public class DBApp {
 					break;
 				}
 			}
-		if (!strColName.equals(findPrimaryColumn(tableData, strTableName))) {
+		if (true || !strColName.equals(findPrimaryColumn(tableData, strTableName))) {
 			// create a file for indexing
 			// sort data
 			// store references for elements in hashtable
@@ -360,6 +360,7 @@ public class DBApp {
 				 * Assuring each record has a unique key in the entire table.
 				 */
 				int type = 0;
+				findPrimaryColumn(null, strTableName);
 				for (int i = 0; i < pkeys.length; i++) {
 					Couple[] temp = table.get(pkeys[i]);
 					for (int k = 0; k < temp.length; k++) {
@@ -371,8 +372,8 @@ public class DBApp {
 				}
 
 				for (int i = 0; i < pkeys.length; i++) {
-					tempToSort.add(
-							new RecordReference(table.get(pkeys[i])[type].getValue(), fi, t.toString().substring(10)));
+					tempToSort.add(new RecordReference(findPrimaryKey(table.get(pkeys[i]), strTableName),
+							table.get(pkeys[i])[type].getValue(), fi, t.toString().substring(10)));
 				}
 			}
 			fis.close();
@@ -644,7 +645,7 @@ public class DBApp {
 				// file.
 				oos.close();
 
-				updateBRIN(strTableName, rowData, insertedIn);
+				updateBRIN(strTableName, findPrimaryKey(rowData, strTableName), insertedIn);
 				if (tobeAdded != null) {
 					insertNext(strTableName, metaData, tobeAdded, counter, p, f, ind, number);
 				}
@@ -696,7 +697,7 @@ public class DBApp {
 		oos.writeObject(tempPage); // Record saved in the .class
 		// file.
 		oos.close();
-		updateBRIN(strTableName, rowData, insertedIn);
+		updateBRIN(strTableName, findPrimaryKey(rowData, strTableName), insertedIn);
 		storeInstances();
 	}
 
@@ -926,7 +927,8 @@ public class DBApp {
 								break;
 							}
 						}
-						indBlock.get(string).add(new RecordReference(rowData[j].getValue(), insertedIn, type));
+						indBlock.get(string).add(new RecordReference(findPrimaryKey(rowData, strTableName),
+								rowData[j].getValue(), insertedIn, type));
 					}
 				}
 				Collections.sort(indBlock.get(string));
@@ -936,6 +938,48 @@ public class DBApp {
 						densePages.add(new DensePage(strTableName, string));
 					densePages.getLast().add(indBlock.get(string).get(i1));
 				}
+				LinkedList<BRINPage> tempSecInd = sortWithRef(densePages, string, strTableName);
+				Hashtable<String, LinkedList<BRINPage>> tempMainSecInd = readTableSecInd(strTableName);
+				tempMainSecInd.remove(string);
+				tempMainSecInd.put(string, tempSecInd);
+				Hashtable<String, LinkedList<DensePage>> tempMainDenseInd = readTableDense(strTableName);
+				tempMainDenseInd.remove(string);
+				tempMainDenseInd.put(string, densePages);
+				storeInstances();
+			}
+
+		}
+
+	}
+
+	public void updateBRIN(String strTableName, Object key, int in) throws ClassNotFoundException, IOException {
+		if (!tableExists(strTableName)) {
+			System.out.println("From Database: Table doesn't exist");
+		} else {
+			/*
+			 * Retrieving previously stored Hashtables for tables' files and
+			 * pages and re-assigning class's instance variables with them.
+			 */
+			HashMap<String, Couple[]> metaData = readMetaData();
+			Couple[] temp = metaData.get(strTableName);
+			Hashtable<String, LinkedList<BRINPage>> secInd = readTableSecInd(strTableName);
+			Object[] tableCols = (Object[]) secInd.keySet().toArray();
+			Hashtable<String, LinkedList<RecordReference>> indBlock = readTableDenseBlock(strTableName);
+			for (int i = 0; i < tableCols.length; i++) {
+				String string = (String) tableCols[i];
+				Collections.sort(indBlock.get(string));
+				LinkedList<DensePage> densePages = new LinkedList<DensePage>();
+				for (int i1 = 0; i1 < indBlock.get(string).size(); i1++) {
+					if (indBlock.get(string).get(i1).getId().equals(key))
+						indBlock.get(string).get(i1).setLocation(in);
+					if (i1 % max == 0)
+						densePages.add(new DensePage(strTableName, string));
+					densePages.getLast().add(indBlock.get(string).get(i1));
+				}
+				LinkedList<BRINPage> tempSecInd = sortWithRef(densePages, string, strTableName);
+				Hashtable<String, LinkedList<BRINPage>> tempMainSecInd = readTableSecInd(strTableName);
+				tempMainSecInd.remove(string);
+				tempMainSecInd.put(string, tempSecInd);
 				Hashtable<String, LinkedList<DensePage>> tempMainDenseInd = readTableDense(strTableName);
 				tempMainDenseInd.remove(string);
 				tempMainDenseInd.put(string, densePages);
@@ -968,6 +1012,10 @@ public class DBApp {
 						densePages.add(new DensePage(strTableName, string));
 					densePages.getLast().add(indBlock.get(string).get(i1));
 				}
+				LinkedList<BRINPage> tempSecInd = sortWithRef(densePages, string, strTableName);
+				Hashtable<String, LinkedList<BRINPage>> tempMainSecInd = readTableSecInd(strTableName);
+				tempMainSecInd.remove(string);
+				tempMainSecInd.put(string, tempSecInd);
 				Hashtable<String, LinkedList<DensePage>> tempMainDenseInd = readTableDense(strTableName);
 				tempMainDenseInd.remove(string);
 				tempMainDenseInd.put(string, densePages);
@@ -977,6 +1025,42 @@ public class DBApp {
 		}
 
 	}
+
+	// public void updateBRINInsert(String strTableName, Couple[] l) throws
+	// ClassNotFoundException, IOException {
+	// if (!tableExists(strTableName)) {
+	// System.out.println("From Database: Table doesn't exist");
+	// } else {
+	// /*
+	// * Retrieving previously stored Hashtables for tables' files and
+	// * pages and re-assigning class's instance variables with them.
+	// */
+	// HashMap<String, Couple[]> metaData = readMetaData();
+	// Couple[] temp = metaData.get(strTableName);
+	// Hashtable<String, LinkedList<BRINPage>> secInd =
+	// readTableSecInd(strTableName);
+	// Object[] tableCols = (Object[]) secInd.keySet().toArray();
+	// Hashtable<String, LinkedList<RecordReference>> indBlock =
+	// readTableDenseBlock(strTableName);
+	// for (int i = 0; i < tableCols.length; i++) {
+	// String string = (String) tableCols[i];
+	// Collections.sort(indBlock.get(string));
+	// LinkedList<DensePage> densePages = new LinkedList<DensePage>();
+	// for (int i1 = 0; i1 < indBlock.get(string).size(); i1++) {
+	// if (i1 % max == 0)
+	// densePages.add(new DensePage(strTableName, string));
+	// densePages.getLast().add(indBlock.get(string).get(i1));
+	// }
+	// Hashtable<String, LinkedList<DensePage>> tempMainDenseInd =
+	// readTableDense(strTableName);
+	// tempMainDenseInd.remove(string);
+	// tempMainDenseInd.put(string, densePages);
+	// storeInstances();
+	// }
+	//
+	// }
+	//
+	// }
 
 	/***
 	 * On an existing record update.
@@ -1103,7 +1187,7 @@ public class DBApp {
 		for (int i = 0; i < tableFiles.size(); i++) {
 			if (tempInd.get(i) != null)
 				if ((Integer) tempInd.get(i).getFirst() <= (Integer) key
-						&& (Integer) tempInd.get(i).getLast() >= (Integer) key) {
+						&& (tempInd.get(i).getLast() == null || (Integer) tempInd.get(i).getLast() >= (Integer) key)) {
 
 					File tableFile = tableFiles.get(i);
 					FileInputStream fis = new FileInputStream(tableFile);
@@ -1268,13 +1352,15 @@ public class DBApp {
 		HashMap<String, Couple[]> metaData = readMetaData();
 		Couple[] rowInfo = metaData.get(strTableName);
 		String primaryCol = null;
-		for (int i = 0; i < rowData.length; i++) { // getting primary key value
-			if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
-				primaryCol = rowData[i].getKey();
-				break;
-			}
-		}
-		return primaryCol;
+		// for (int i = 0; i < rowData.length; i++) { // getting primary key
+		// value
+		// if (rowData[i].getKey().equals(rowInfo[0].getKey())) {
+		// primaryCol = rowData[i].getKey();
+		// break;
+		// }
+		// }
+		return rowInfo[0].getKey();
+		// return primaryCol;
 	}
 
 	/***
