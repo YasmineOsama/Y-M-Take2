@@ -69,6 +69,11 @@ public class DBAppTest {
 		htblColNameValue.put("name", new String("Zaky Noor"));
 		htblColNameValue.put("gpa", new Double(0.88));
 		app.insertIntoTable(strTableName, htblColNameValue);
+		Object[] objarrValues = new Object[1];
+		objarrValues[0] = "Ahmed Noor";
+		String[] strarrOperators = new String[1];
+		strarrOperators[0] = "<";
+		app.selectFromTable(strTableName, "name", objarrValues, strarrOperators);
 		FileInputStream fis = new FileInputStream("classes/Students_data.class");
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		Page p = (Page) ois.readObject();
