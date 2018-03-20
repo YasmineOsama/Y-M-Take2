@@ -1383,7 +1383,8 @@ public class DBApp {
 	@SuppressWarnings("rawtypes")
 	public Iterator selectFromTable(String strTableName, String strColumnName, Object[] objarrValues,
 			String[] strarrOperators) throws ClassNotFoundException, IOException {
-		Collection<Object> result = new ArrayList<Object>();
+		LinkedList<Object> result = new LinkedList<Object>();
+		Iterator<Object> iter = result.iterator();
 		if(strarrOperators.length > 2 || strarrOperators.length < 1) {
 			System.out.println("From Database: invalid number of operators");
 		}
@@ -1432,203 +1433,199 @@ public class DBApp {
 				type = "dbl";
 			}
 			createBRINIndex(strTableName, strColumnName);
-			if(strColumnName.equals(tableData[0])){
-				LinkedList<IndexCouple> index = readTableIndices(strTableName);
-				for(int i = 0; i < objarrValues.length; i++) {
-					String op = strarrOperators [i];
-					if(i > 0) {
-						switch(op) {
-						case ">": op = "<"; break;
-						case "<": op = ">"; break;
-						case ">=": op = "<="; break;
-						case "<=": op = "<=";
-						}
-					}
-					for(int j = 0; j < index.size(); j++) {
-						switch(type) {
-						case "int": {
-							int obvalue = (int) objarrValues [i];
-							int first = (int) index.get(j).getFirst();
-							int last = (int) index.get(j).getLast();
-							switch(op) {
-							case ">": {
-								if(obvalue > first) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue <= (int) pkeys [k]) {
-											break;
-										}
-										result.add(pkeys[k]);
-									}
-								}
-								break;
-							}
-							case "<": {
-								if(obvalue < last) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue < (int) pkeys [k]) {
-											result.add(pkeys[k]);
-										}
-									}
-								}
-								break;
-							}
-							case ">=": {
-								if(obvalue >= first) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue < (int) pkeys [k]) {
-											break;
-										}
-										result.add(pkeys[k]);
-									}
-								}
-								break;
-							}
-							case "<=": {
-								if(obvalue <= last) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue <= (int) pkeys [k]) {
-											result.add(pkeys[k]);
-										}
-									}
-								}
-							}
-							}
-							break;
-						}
-						case "str": {
-							String obvalue = (String) objarrValues [i];
-							String first = (String) index.get(j).getFirst();
-							String last = (String) index.get(j).getLast();
-							switch(op) {
-							case ">": {
-								if(obvalue.compareTo(first) > 0) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue.compareTo((String) pkeys [k]) <= 0) {
-											break;
-										}
-										result.add(pkeys[k]);
-									}
-								}
-								break;
-							}
-							case "<": {
-								if(obvalue.compareTo(last) < 0) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue.compareTo((String) pkeys [k]) < 0 ) {
-											result.add(pkeys[k]);
-										}
-									}
-								}
-								break;
-							}
-							case ">=": {
-								if(obvalue.compareTo(first) >= 0) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue.compareTo((String) pkeys [k]) < 0) {
-											break;
-										}
-										result.add(pkeys[k]);
-									}
-								}
-								break;
-							}
-							case "<=": {
-								if(obvalue.compareTo(last) <= 0) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue.compareTo((String) pkeys [k]) <= 0) {
-											result.add(pkeys[k]);
-										}
-									}
-								}
-							}
-							}
-							break;
+			Hashtable<String, LinkedList<BRINPage>> temp = readTableSecInd(strTableName);
+			temp.get(findPrimaryColumn(null, strTableName));
 
-						}
-						case "dbl":
-							double obvalue = (double) objarrValues [i];
-							double first = (double) index.get(j).getFirst();
-							double last = (double) index.get(j).getLast();
-							switch(op) {
-							case ">": {
-								if(obvalue > first) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue <= (double) pkeys [k]) {
-											break;
-										}
-										result.add(pkeys[k]);
+			LinkedList<IndexCouple> index = readTableIndices(strTableName);
+			for(int i = 0; i < objarrValues.length; i++) {
+				String op = strarrOperators [i];
+				if(i > 0) {
+					switch(op) {
+					case ">": op = "<"; break;
+					case "<": op = ">"; break;
+					case ">=": op = "<="; break;
+					case "<=": op = "<=";
+					}
+				}
+				for(int j = 0; j < index.size(); j++) {
+					switch(type) {
+					case "int": {
+						int obvalue = (int) objarrValues [i];
+						int first = (int) index.get(j).getFirst();
+						int last = (int) index.get(j).getLast();
+						switch(op) {
+						case ">": {
+							if(obvalue > first) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue <= (int) pkeys [k]) {
+										break;
 									}
+									result.add(pkeys[k]);
 								}
-								break;
-							}
-							case "<": {
-								if(obvalue < last) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue < (double) pkeys [k]) {
-											result.add(pkeys[k]);
-										}
-									}
-								}
-								break;
-							}
-							case ">=": {
-								if(obvalue >= first) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue < (double) pkeys [k]) {
-											break;
-										}
-										result.add(pkeys[k]);
-									}
-								}
-								break;
-							}
-							case "<=": {
-								if(obvalue <= last) {
-									LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
-									Object[] pkeys = table.keySet().toArray();
-									for(int k = 0; k<pkeys.length; k++) {
-										if(obvalue <= (double) pkeys [k]) {
-											result.add(pkeys[k]);
-										}
-									}
-								}
-							}
 							}
 							break;
 						}
+						case "<": {
+							if(obvalue < last) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue < (int) pkeys [k]) {
+										result.add(pkeys[k]);
+									}
+								}
+							}
+							break;
+						}
+						case ">=": {
+							if(obvalue >= first) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue < (int) pkeys [k]) {
+										break;
+									}
+									result.add(pkeys[k]);
+								}
+							}
+							break;
+						}
+						case "<=": {
+							if(obvalue <= last) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue <= (int) pkeys [k]) {
+										result.add(pkeys[k]);
+									}
+								}
+							}
+						}
+						}
+						break;
+					}
+					case "str": {
+						String obvalue = (String) objarrValues [i];
+						String first = (String) index.get(j).getFirst();
+						String last = (String) index.get(j).getLast();
+						switch(op) {
+						case ">": {
+							if(obvalue.compareTo(first) > 0) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue.compareTo((String) pkeys [k]) <= 0) {
+										break;
+									}
+									result.add(pkeys[k]);
+								}
+							}
+							break;
+						}
+						case "<": {
+							if(obvalue.compareTo(last) < 0) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue.compareTo((String) pkeys [k]) < 0 ) {
+										result.add(pkeys[k]);
+									}
+								}
+							}
+							break;
+						}
+						case ">=": {
+							if(obvalue.compareTo(first) >= 0) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue.compareTo((String) pkeys [k]) < 0) {
+										break;
+									}
+									result.add(pkeys[k]);
+								}
+							}
+							break;
+						}
+						case "<=": {
+							if(obvalue.compareTo(last) <= 0) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue.compareTo((String) pkeys [k]) <= 0) {
+										result.add(pkeys[k]);
+									}
+								}
+							}
+						}
+						}
+						break;
+
+					}
+					case "dbl":
+						double obvalue = (double) objarrValues [i];
+						double first = (double) index.get(j).getFirst();
+						double last = (double) index.get(j).getLast();
+						switch(op) {
+						case ">": {
+							if(obvalue > first) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue <= (double) pkeys [k]) {
+										break;
+									}
+									result.add(pkeys[k]);
+								}
+							}
+							break;
+						}
+						case "<": {
+							if(obvalue < last) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue < (double) pkeys [k]) {
+										result.add(pkeys[k]);
+									}
+								}
+							}
+							break;
+						}
+						case ">=": {
+							if(obvalue >= first) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue < (double) pkeys [k]) {
+										break;
+									}
+									result.add(pkeys[k]);
+								}
+							}
+							break;
+						}
+						case "<=": {
+							if(obvalue <= last) {
+								LinkedHashMap<Object, Couple[]> table = table(j, strTableName);
+								Object[] pkeys = table.keySet().toArray();
+								for(int k = 0; k<pkeys.length; k++) {
+									if(obvalue <= (double) pkeys [k]) {
+										result.add(pkeys[k]);
+									}
+								}
+							}
+						}
+						}
+						break;
 					}
 				}
 			}
-			else {
-				Hashtable<String, LinkedList<BRINPage>> secInd = readTableSecInd (strTableName);
-			}
-
-
 		}
 
-		return null;
+		return iter;
 	}
 	public LinkedHashMap<Object, Couple[]> table(int page, String strTableName) throws IOException, ClassNotFoundException {
 		FileInputStream fis;
