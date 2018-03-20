@@ -4,9 +4,18 @@ import java.io.Serializable;
 
 public class RecordReference implements Serializable, Comparable<Object> {
 	private static final long serialVersionUID = 1L;
+	Object id;
 	Object content;
 	int location;
 	String type;
+
+	public Object getId() {
+		return id;
+	}
+
+	public void setId(Object id) {
+		this.id = id;
+	}
 
 	public Object getContent() {
 		return content;
@@ -24,8 +33,9 @@ public class RecordReference implements Serializable, Comparable<Object> {
 		this.location = location;
 	}
 
-	public RecordReference(Object obj, int location, String type) {
+	public RecordReference(Object id, Object obj, int location, String type) {
 		content = obj;
+		this.id = id;
 		this.location = location;
 		this.type = type;
 	}

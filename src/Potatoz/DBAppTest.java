@@ -19,6 +19,7 @@ public class DBAppTest {
 		htblColNameType.put("name", "java.lang.String");
 		htblColNameType.put("gpa", "java.lang.Double");
 		app.createTable(strTableName, "id", htblColNameType);
+		app.createBRINIndex(strTableName, "id");
 		System.out.println("- Trying to insert a record with id 8.");
 		Hashtable<String, Object> htblColNameValue = new Hashtable<String, Object>();
 		htblColNameValue.put("id", new Integer(8));
