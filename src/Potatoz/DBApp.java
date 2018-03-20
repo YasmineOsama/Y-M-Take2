@@ -1026,42 +1026,6 @@ public class DBApp {
 
 	}
 
-	// public void updateBRINInsert(String strTableName, Couple[] l) throws
-	// ClassNotFoundException, IOException {
-	// if (!tableExists(strTableName)) {
-	// System.out.println("From Database: Table doesn't exist");
-	// } else {
-	// /*
-	// * Retrieving previously stored Hashtables for tables' files and
-	// * pages and re-assigning class's instance variables with them.
-	// */
-	// HashMap<String, Couple[]> metaData = readMetaData();
-	// Couple[] temp = metaData.get(strTableName);
-	// Hashtable<String, LinkedList<BRINPage>> secInd =
-	// readTableSecInd(strTableName);
-	// Object[] tableCols = (Object[]) secInd.keySet().toArray();
-	// Hashtable<String, LinkedList<RecordReference>> indBlock =
-	// readTableDenseBlock(strTableName);
-	// for (int i = 0; i < tableCols.length; i++) {
-	// String string = (String) tableCols[i];
-	// Collections.sort(indBlock.get(string));
-	// LinkedList<DensePage> densePages = new LinkedList<DensePage>();
-	// for (int i1 = 0; i1 < indBlock.get(string).size(); i1++) {
-	// if (i1 % max == 0)
-	// densePages.add(new DensePage(strTableName, string));
-	// densePages.getLast().add(indBlock.get(string).get(i1));
-	// }
-	// Hashtable<String, LinkedList<DensePage>> tempMainDenseInd =
-	// readTableDense(strTableName);
-	// tempMainDenseInd.remove(string);
-	// tempMainDenseInd.put(string, densePages);
-	// storeInstances();
-	// }
-	//
-	// }
-	//
-	// }
-
 	/***
 	 * On an existing record update.
 	 * 
@@ -1235,7 +1199,6 @@ public class DBApp {
 		return null;
 	}
 
-
 	/***
 	 * On an existing record deletion.
 	 * 
@@ -1388,14 +1351,14 @@ public class DBApp {
 		if(strarrOperators.length > 2 || strarrOperators.length < 1) {
 			System.out.println("From Database: invalid number of operators");
 		}
-		for(int i = 0; i< strarrOperators.length; i++) {
+		for (int i = 0; i < strarrOperators.length; i++) {
 			String op = strarrOperators[i];
-			if(!(op.equals(">")||op.equals("<")||op.equals(">=")||op.equals("<="))) {
+			if (!(op.equals(">") || op.equals("<") || op.equals(">=") || op.equals("<="))) {
 				System.out.println("From Database: Invalid Operator");
 				return null;
 			}
 		}
-		if(!(strarrOperators.length == objarrValues.length)) {
+		if (!(strarrOperators.length == objarrValues.length)) {
 			System.out.println("From Database: Number of operators must equal number of values");
 			return null;
 		}
@@ -1406,30 +1369,30 @@ public class DBApp {
 		} else {
 			Object value = null;
 			Couple[] tableData = metaData.get(strTableName);
-			for(int i=0; i< tableData.length; i++) {
-				if(tableData[i].getKey() == strColumnName) {
+			for (int i = 0; i < tableData.length; i++) {
+				if (tableData[i].getKey() == strColumnName) {
 					value = tableData[i].getValue();
 					break;
 				}
 			}
-			if(value == null) {
+			if (value == null) {
 				System.out.println("From Database: Invalid column name");
 				return null;
 			}
-			for(int i = 0; i < objarrValues.length; i++) {
+			for (int i = 0; i < objarrValues.length; i++) {
 				if (!objarrValues[i].getClass().toString().substring(6).equals(value.toString())) {
 					System.out.println("From Database: value type is incompatible with column type");
 					return null;
 				}
 			}
 			String type = null;
-			if(objarrValues[0].getClass().toString().substring(6).equals("java.lang.Integer")) {
+			if (objarrValues[0].getClass().toString().substring(6).equals("java.lang.Integer")) {
 				type = "int";
 			}
-			if(objarrValues[0].getClass().toString().substring(6).equals("java.lang.String")) {
+			if (objarrValues[0].getClass().toString().substring(6).equals("java.lang.String")) {
 				type = "str";
 			}
-			if(objarrValues[0].getClass().toString().substring(6).equals("java.lang.double")) {
+			if (objarrValues[0].getClass().toString().substring(6).equals("java.lang.double")) {
 				type = "dbl";
 			}
 			createBRINIndex(strTableName, strColumnName);
@@ -1473,6 +1436,7 @@ public class DBApp {
 								Object[] pkeys = table.keySet().toArray();
 								for(int k = 0; k<pkeys.length; k++) {
 									if(obvalue < (int) pkeys [k]) {
+
 										result.add(pkeys[k]);
 									}
 								}
@@ -1486,6 +1450,7 @@ public class DBApp {
 								for(int k = 0; k<pkeys.length; k++) {
 									if(obvalue < (int) pkeys [k]) {
 										break;
+
 									}
 									result.add(pkeys[k]);
 								}
@@ -1530,6 +1495,7 @@ public class DBApp {
 								Object[] pkeys = table.keySet().toArray();
 								for(int k = 0; k<pkeys.length; k++) {
 									if(obvalue.compareTo((String) pkeys [k]) < 0 ) {
+
 										result.add(pkeys[k]);
 									}
 								}
@@ -1543,6 +1509,7 @@ public class DBApp {
 								for(int k = 0; k<pkeys.length; k++) {
 									if(obvalue.compareTo((String) pkeys [k]) < 0) {
 										break;
+
 									}
 									result.add(pkeys[k]);
 								}
@@ -1622,12 +1589,15 @@ public class DBApp {
 						break;
 					}
 				}
-			}
+			} 
+
 		}
 
 		return iter;
 	}
-	public LinkedHashMap<Object, Couple[]> table(int page, String strTableName) throws IOException, ClassNotFoundException {
+
+	public LinkedHashMap<Object, Couple[]> table(int page, String strTableName)
+			throws IOException, ClassNotFoundException {
 		FileInputStream fis;
 		if (page == 0)
 			fis = new FileInputStream("classes/" + strTableName + "_data.class");
