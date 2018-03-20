@@ -946,6 +946,38 @@ public class DBApp {
 
 	}
 
+	public void updateBRIN(String strTableName) throws ClassNotFoundException, IOException {
+		if (!tableExists(strTableName)) {
+			System.out.println("From Database: Table doesn't exist");
+		} else {
+			/*
+			 * Retrieving previously stored Hashtables for tables' files and
+			 * pages and re-assigning class's instance variables with them.
+			 */
+			HashMap<String, Couple[]> metaData = readMetaData();
+			Couple[] temp = metaData.get(strTableName);
+			Hashtable<String, LinkedList<BRINPage>> secInd = readTableSecInd(strTableName);
+			Object[] tableCols = (Object[]) secInd.keySet().toArray();
+			Hashtable<String, LinkedList<RecordReference>> indBlock = readTableDenseBlock(strTableName);
+			for (int i = 0; i < tableCols.length; i++) {
+				String string = (String) tableCols[i];
+				Collections.sort(indBlock.get(string));
+				LinkedList<DensePage> densePages = new LinkedList<DensePage>();
+				for (int i1 = 0; i1 < indBlock.get(string).size(); i1++) {
+					if (i1 % max == 0)
+						densePages.add(new DensePage(strTableName, string));
+					densePages.getLast().add(indBlock.get(string).get(i1));
+				}
+				Hashtable<String, LinkedList<DensePage>> tempMainDenseInd = readTableDense(strTableName);
+				tempMainDenseInd.remove(string);
+				tempMainDenseInd.put(string, densePages);
+				storeInstances();
+			}
+
+		}
+
+	}
+
 	/***
 	 * On an existing record update.
 	 * 
@@ -1008,11 +1040,11 @@ public class DBApp {
 						Couple[] get = table.get(arrayString[index]);
 						Hashtable<String, Object> updatedRow = newRow(get, htblColNameValue);
 						table.remove(arrayString[index]);
+						deleteRecordById(strTableName, arrayString[index], get);
 						readTable.setPage(table);
 						ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
 						oos.writeObject(readTable); // Record saved in the
-													// .class
-						// file.
+													// .class file.
 						oos.close();
 						storeInstances();
 						insertIntoTable(strTableName, updatedRow);
@@ -1060,6 +1092,75 @@ public class DBApp {
 		return updatedRow;
 	}
 
+	public Couple[] deleteRecordById(String strTableName, Object key, Couple[] c)
+			throws ClassNotFoundException, IOException {
+		LinkedList<File> tableFiles = readTableFiles(strTableName);
+		LinkedList<IndexCouple> tempInd = readTableIndices(strTableName);
+		/*
+		 * For loop iterating over all written files on the disk to find the
+		 * record and handling the deletion process.
+		 */
+		for (int i = 0; i < tableFiles.size(); i++) {
+			if (tempInd.get(i) != null)
+				if ((Integer) tempInd.get(i).getFirst() <= (Integer) key
+						&& (Integer) tempInd.get(i).getLast() >= (Integer) key) {
+
+					File tableFile = tableFiles.get(i);
+					FileInputStream fis = new FileInputStream(tableFile);
+
+					if (fis.available() > 0) {
+						ObjectInputStream ois = new ObjectInputStream(fis);
+						Page readTable = (Page) (ois.readObject());
+						ois.close();
+						LinkedHashMap<Object, Couple[]> table = readTable.getPage();
+						Object[] arrayString = table.keySet().toArray();
+						/*
+						 * For loop removing the record once it is found.
+						 */
+						if (table.containsKey(key)) {
+							table.remove(key);
+							ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(tableFile.getName()));
+							oos.writeObject(readTable); // Record saved in the
+														// .class file.
+							oos.close();
+							Hashtable<String, LinkedList<RecordReference>> tempDense = readTableDenseBlock(
+									strTableName);
+							Object[] tempKeys = tempDense.keySet().toArray();
+							for (int j = 0; j < tempKeys.length; j++) {
+								LinkedList<RecordReference> tempBlock = tempDense.get(tempKeys[j]);
+								Object val = null;
+								for (int l = 0; l < c.length; l++) {
+									if (c[l].getKey().equals(tempKeys[j])) {
+										val = c[l].getValue();
+										break;
+									}
+								}
+								for (RecordReference recordReference : tempBlock) {
+									if (recordReference.equals(key))
+										tempBlock.remove(val);
+								}
+							}
+							storeInstances();
+							updateBRIN(strTableName);
+
+						}
+
+					}
+				}
+		}
+		return null;
+	}
+
+	// public void sortIndexAfterRemove(LinkedList<IndexCouple> temp, Object
+	// key) {
+	// for (int i = 0; i < temp.size(); i++) {
+	// if ((Integer) temp.get(i).getFirst() <= (Integer) key && (Integer)
+	// temp.get(i).getLast() >= (Integer) key) {
+	//
+	// }
+	// }
+	// }
+
 	/***
 	 * On an existing record deletion.
 	 * 
@@ -1093,6 +1194,7 @@ public class DBApp {
 			 * Following if() will be executed if the page contains records.
 			 */
 			LinkedList<File> tableFiles = readTableFiles(strTableName);
+			LinkedList<IndexCouple> tempInd = readTableIndices(strTableName);
 			/*
 			 * For loop iterating over all written files on the disk to find the
 			 * record and handling the deletion process.
