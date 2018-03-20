@@ -1026,42 +1026,6 @@ public class DBApp {
 
 	}
 
-	// public void updateBRINInsert(String strTableName, Couple[] l) throws
-	// ClassNotFoundException, IOException {
-	// if (!tableExists(strTableName)) {
-	// System.out.println("From Database: Table doesn't exist");
-	// } else {
-	// /*
-	// * Retrieving previously stored Hashtables for tables' files and
-	// * pages and re-assigning class's instance variables with them.
-	// */
-	// HashMap<String, Couple[]> metaData = readMetaData();
-	// Couple[] temp = metaData.get(strTableName);
-	// Hashtable<String, LinkedList<BRINPage>> secInd =
-	// readTableSecInd(strTableName);
-	// Object[] tableCols = (Object[]) secInd.keySet().toArray();
-	// Hashtable<String, LinkedList<RecordReference>> indBlock =
-	// readTableDenseBlock(strTableName);
-	// for (int i = 0; i < tableCols.length; i++) {
-	// String string = (String) tableCols[i];
-	// Collections.sort(indBlock.get(string));
-	// LinkedList<DensePage> densePages = new LinkedList<DensePage>();
-	// for (int i1 = 0; i1 < indBlock.get(string).size(); i1++) {
-	// if (i1 % max == 0)
-	// densePages.add(new DensePage(strTableName, string));
-	// densePages.getLast().add(indBlock.get(string).get(i1));
-	// }
-	// Hashtable<String, LinkedList<DensePage>> tempMainDenseInd =
-	// readTableDense(strTableName);
-	// tempMainDenseInd.remove(string);
-	// tempMainDenseInd.put(string, densePages);
-	// storeInstances();
-	// }
-	//
-	// }
-	//
-	// }
-
 	/***
 	 * On an existing record update.
 	 * 
