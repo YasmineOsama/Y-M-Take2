@@ -18,18 +18,17 @@ public class CSV {
 		sb.append(',');
 		sb.append("rating");
 		sb.append('\n');
-		
-		String [] rounds = {"32nd","16th","quarter_final","SemiFinal","Final"};
-		
-		Random rand = new Random();
-		
-		for (int i = 0; i < 2680; i++) {
-			
-			int  round = rand.nextInt(4)+1;
-			int  num_rating = rand.nextInt(9000)+1000;
-			int  rating = rand.nextInt(10)+1;
 
-			
+		String[] rounds = { "32nd", "16th", "QuarterFinal", "SemiFinal", "Final" };
+
+		Random rand = new Random();
+
+		for (int i = 0; i < 500000; i++) {
+
+			int round = rand.nextInt(5);
+			int num_rating = rand.nextInt(9000) + 1000;
+			int rating = rand.nextInt(11);
+
 			sb.append(i);
 			sb.append(',');
 			sb.append(rounds[round]);
@@ -40,7 +39,7 @@ public class CSV {
 			sb.append(',');
 			sb.append(rating);
 			sb.append('\n');
-			
+
 		}
 		pw.write(sb.toString());
 		pw.close();

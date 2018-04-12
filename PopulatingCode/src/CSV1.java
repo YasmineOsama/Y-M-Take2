@@ -26,16 +26,16 @@ public class CSV1 {
 		Set<String> records = new HashSet<>();
 		String m = "";
 
-		for (int i = 0; i < 58842; i++) {
+		for (int i = 0; i < 9977272; i++) {
 
-			int match = rand.nextInt(2680);
+			int match = rand.nextInt(9977272);
 			int r = rand.nextInt(26);
 			int position = rand.nextInt(4) + 1;
 
 			while (true) {
 
 				if (records.contains(names[r] + match)) {
-					match = rand.nextInt(2680);
+					match = rand.nextInt(9977272);
 
 				}
 
@@ -55,10 +55,9 @@ public class CSV1 {
 			sb.append('\n');
 
 			records.add(names[r] + match);
-
 		}
 
-		for (int i = 0; i < 118; i++) {
+		for (int i = 0; i < 22728; i++) {
 
 			sb.append(i);
 			sb.append(',');
